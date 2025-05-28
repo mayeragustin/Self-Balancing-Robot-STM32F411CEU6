@@ -1,0 +1,4 @@
+../Core/Src/Protocol_Handler/protocol_handler.c:19:6:Comm_Init	24	static
+../Core/Src/Protocol_Handler/protocol_handler.c:33:6:Comm_Task	16	static
+../Core/Src/Protocol_Handler/protocol_handler.c:47:6:decodeProtocol	24	static
+../Core/Src/Protocol_Handler/protocol_handler.c:118:6:comm_sendCMD	24	static

@@ -1,0 +1,5 @@
+../Core/Src/Debouncer/debouncer.c:15:6:inputState	11
+../Core/Src/Debouncer/debouncer.c:54:6:Debounce_Init	2
+../Core/Src/Debouncer/debouncer.c:62:9:Debounce_Add	2
+../Core/Src/Debouncer/debouncer.c:70:6:Debouncer_Task	2
+../Core/Src/Debouncer/debouncer.c:77:9:getInputState	1
