@@ -15,7 +15,8 @@
 
 typedef enum{
 	SYS_OK,
-	SYS_ERROR
+	SYS_ERROR,
+	SYS_BUSY
 }e_system;
 
 typedef union{

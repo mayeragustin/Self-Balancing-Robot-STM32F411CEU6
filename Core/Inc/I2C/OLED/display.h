@@ -133,7 +133,7 @@ void Display_ShowBitmap(const unsigned char bitmap[]);
 
 void Display_SetCursor(uint8_t x, uint8_t y);
 
-char Display_WriteString(const char* str, FontDef_t Font, SSD1306_COLOR_t color);
+char Display_WriteString(char* str, FontDef_t Font, SSD1306_COLOR_t color);
 
 char Display_WriteChar(char ch, FontDef_t Font, SSD1306_COLOR_t color);
 
