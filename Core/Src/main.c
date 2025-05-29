@@ -73,6 +73,8 @@ DMA_HandleTypeDef hdma_i2c1_rx;
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim3;
 
+UART_HandleTypeDef huart1;
+
 /* USER CODE BEGIN PV */
 
 //uint8_t DMA_BUFFER[1048];
@@ -115,6 +117,8 @@ struct USB_DATA{
 struct CAR_DATA{
 	e_Car_state state;
 }Car;
+
+uint8_t	dataRx;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -125,7 +129,16 @@ static void MX_ADC1_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+	if(huart->Instance == USART1){
+		//dataTx = dataRx;
+		HAL_UART_Receive_IT(&huart1, &dataRx, 1);
+		dataRx = 0;
+	}
+}
 
 /* HAL FUNCTIONS */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
@@ -306,6 +319,7 @@ void OLED_Task(){
 				}
 			}
 
+<<<<<<< HEAD
 			if(MPU6050.isInit){
 				MPU6050.Acc.x = (MPU6050.Acc.x >> 14) * 9.8f;
 				MPU6050.Acc.y = (MPU6050.Acc.y >> 14) * 9.8f;
@@ -329,6 +343,31 @@ void OLED_Task(){
 				Display_SetCursor(73, 51);
 				Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
 			}
+=======
+
+			MPU6050.Acc.x = (MPU6050.Acc.x >> 14) * 9.8f;
+			MPU6050.Acc.y = (MPU6050.Acc.y >> 14) * 9.8f;
+			MPU6050.Acc.z = (MPU6050.Acc.z >> 14) * 9.8f;
+
+			sprintf((char*)Display.auxString, "Ax:%d", MPU6050.Acc.x);
+			Display_SetCursor(25, 17);
+			Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+			sprintf((char*)Display.auxString, "Ay:%d", MPU6050.Acc.y);
+			Display_SetCursor(25, 34);
+			Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+			sprintf((char*)Display.auxString, "Az:%d", MPU6050.Acc.z);
+			Display_SetCursor(25, 51);
+			Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+			sprintf((char*)Display.auxString, "Gx:%d", MPU6050.Gyro.x);
+			Display_SetCursor(73, 17);
+			Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+			sprintf((char*)Display.auxString, "Gy:%d", MPU6050.Gyro.y);
+			Display_SetCursor(73, 34);
+			Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+			sprintf((char*)Display.auxString, "Gz:%d", MPU6050.Gyro.z);
+			Display_SetCursor(73, 51);
+			Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+>>>>>>> 3ede334a79d198cd1ab9095a598e9b3782bdaf42
 			break;
 		}
 	}
@@ -444,6 +483,15 @@ void onKeyChangeState(e_Estados value){
 }
 
 void task_10ms(){
+
+	Debouncer_Task();
+	Motor_Break_Timeout(&MotorL);
+	Motor_Break_Timeout(&MotorR);
+	Encoder_Task(&EncoderL);
+	Encoder_Task(&EncoderR);
+
+	IS10MS = FALSE;
+
 	is100ms1--;
 	if(!is100ms1){
 		is100ms1 = 10;
@@ -465,6 +513,7 @@ void task_10ms(){
 			}
 		}
 	}
+<<<<<<< HEAD
 
 	Debouncer_Task();
 	Motor_Break_Timeout(&MotorL);
@@ -472,6 +521,8 @@ void task_10ms(){
 	Encoder_Task(&EncoderL);
 	Encoder_Task(&EncoderR);
 	IS10MS = FALSE;
+=======
+>>>>>>> 3ede334a79d198cd1ab9095a598e9b3782bdaf42
 }
 /* USER CODE END 0 */
 
@@ -512,10 +563,13 @@ int main(void)
   MX_TIM1_Init();
   MX_I2C1_Init();
   MX_TIM3_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   /* INICIALIZACIÓN DE PROTOCOLO MEDIANTE USB */
   Comm_Init(&USB.data, &decodeOn_USB, &writeOn_USB);
   CDC_Attach_Rx(&dataRxOn_USB);
+
+  HAL_UART_Receive_IT(&huart1, &dataRx, 1);
   /* FIN INICIALIZACIÓN DE PROTOCOLO MEDIANTE USB */
 
   /* INICIALIZACIÓN DE USER KEY Y DEBOUNCE */
@@ -539,7 +593,7 @@ int main(void)
   /* FIN INICIALIZACIÓN DE TIMERS Y PWM*/
 
   /* INICIALIZACIÓN DE MPU6050 */
-  if(HAL_I2C_IsDeviceReady(&hi2c1, MPU6050_ADDR, 1, 10000) != HAL_OK){
+  /*if(HAL_I2C_IsDeviceReady(&hi2c1, MPU6050_ADDR, 1, 10000) != HAL_OK){
 	  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"MPU6050 READY", 13);
   }else{
 	  MPU6050_Set_I2C_Communication(&I2C_1_Abstract_Mem_Write_Blocking, &I2C_1_Abstract_Mem_Read_Blocking);
@@ -549,7 +603,7 @@ int main(void)
 		  MPU6050_Calibrate(&MPU6050);
 		  MPU6050.isInit = TRUE;
 	  }
-  }
+  }*/
   /* FIN INICIALIZACIÓN DE MPU6050 */
 
   /* INICIALIZACIÓN DISPLAY*/
@@ -577,7 +631,10 @@ int main(void)
   /* FIN INICIALIZACIÓN DE MOTORES Y ENCODERS */
 
   Car.state = IDLE;
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3ede334a79d198cd1ab9095a598e9b3782bdaf42
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -592,8 +649,9 @@ int main(void)
 	Display_UpdateScreen_Task();
 	  /* END USER TASK */
 
-	if(IS10MS)
+	if(IS10MS){
 		task_10ms();
+	}
 
 	switch(Car.state){
 	case IDLE:
@@ -928,6 +986,39 @@ static void MX_TIM3_Init(void)
 }
 
 /**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
   * Enable DMA controller clock
   */
 static void MX_DMA_Init(void)
@@ -1030,14 +1121,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(M2_IN2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : ESP_RX_Pin ESP_TX_Pin */
-  GPIO_InitStruct.Pin = ESP_RX_Pin|ESP_TX_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
@@ -1067,6 +1150,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){ //			1/4000s
 	}
 	if(htim->Instance == TIM3){
 		IS10MS = TRUE;
+<<<<<<< HEAD
 
 	}
 }
@@ -1074,6 +1158,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){ //			1/4000s
 void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c){
 	if(hi2c->Devaddress == SSD1306_I2C_ADDR){
 		Display_I2C_DMA_Ready(TRUE);
+=======
+>>>>>>> 3ede334a79d198cd1ab9095a598e9b3782bdaf42
 	}
 }
 
@@ -1082,6 +1168,15 @@ void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c){
 		MPU6050_I2C_DMA_Cplt(&MPU6050);
 		Display_I2C_DMA_Ready(TRUE);
 	}
+<<<<<<< HEAD
+=======
+	if(hi2c->Devaddress == SSD1306_I2C_ADDR){
+		if(!MPU6050.isInit){
+			Display_I2C_DMA_Ready(TRUE);
+		}
+	}
+
+>>>>>>> 3ede334a79d198cd1ab9095a598e9b3782bdaf42
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
