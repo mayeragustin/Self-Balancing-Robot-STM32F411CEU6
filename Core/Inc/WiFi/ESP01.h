@@ -8,7 +8,7 @@
 #ifndef INC_WIFI_ESP01_H_
 #define INC_WIFI_ESP01_H_
 
-
+/*
 #include <stdint.h>
 #include "utilities.h"
 //#include "WiFi/AT_Config.h"
@@ -41,5 +41,5 @@ typedef enum{
 e_system ESP01_Init();
 
 e_system ESP01_Task();
-
+*/
 #endif /* INC_WIFI_ESP01_H_ */

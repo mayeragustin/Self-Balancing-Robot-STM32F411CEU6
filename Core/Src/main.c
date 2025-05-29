@@ -306,29 +306,29 @@ void OLED_Task(){
 				}
 			}
 
-
-			MPU6050.Acc.x = (MPU6050.Acc.x >> 14) * 9.8f;
-			MPU6050.Acc.y = (MPU6050.Acc.y >> 14) * 9.8f;
-			MPU6050.Acc.z = (MPU6050.Acc.z >> 14) * 9.8f;
-
-			sprintf(Display.auxString, "Ax:%d", MPU6050.Acc.x);
-			Display_SetCursor(25, 17);
-			Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf(Display.auxString, "Ay:%d", MPU6050.Acc.y);
-			Display_SetCursor(25, 34);
-			Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf(Display.auxString, "Az:%d", MPU6050.Acc.z);
-			Display_SetCursor(25, 51);
-			Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf(Display.auxString, "Gx:%d", MPU6050.Gyro.x);
-			Display_SetCursor(73, 17);
-			Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf(Display.auxString, "Gy:%d", MPU6050.Gyro.y);
-			Display_SetCursor(73, 34);
-			Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf(Display.auxString, "Gz:%d", MPU6050.Gyro.z);
-			Display_SetCursor(73, 51);
-			Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+			if(MPU6050.isInit){
+				MPU6050.Acc.x = (MPU6050.Acc.x >> 14) * 9.8f;
+				MPU6050.Acc.y = (MPU6050.Acc.y >> 14) * 9.8f;
+				MPU6050.Acc.z = (MPU6050.Acc.z >> 14) * 9.8f;
+				sprintf(Display.auxString, "Ax:%d", MPU6050.Acc.x);
+				Display_SetCursor(25, 17);
+				Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+				sprintf(Display.auxString, "Ay:%d", MPU6050.Acc.y);
+				Display_SetCursor(25, 34);
+				Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+				sprintf(Display.auxString, "Az:%d", MPU6050.Acc.z);
+				Display_SetCursor(25, 51);
+				Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+				sprintf(Display.auxString, "Gx:%d", MPU6050.Gyro.x);
+				Display_SetCursor(73, 17);
+				Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+				sprintf(Display.auxString, "Gy:%d", MPU6050.Gyro.y);
+				Display_SetCursor(73, 34);
+				Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+				sprintf(Display.auxString, "Gz:%d", MPU6050.Gyro.z);
+				Display_SetCursor(73, 51);
+				Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+			}
 			break;
 		}
 	}
@@ -461,12 +461,16 @@ void task_10ms(){
 			is30s--;
 			if(!is30s){
 				is30s = 30;
-				BateryLevel_Task();
+				//BateryLevel_Task();
 			}
 		}
 	}
 
 	Debouncer_Task();
+	Motor_Break_Timeout(&MotorL);
+	Motor_Break_Timeout(&MotorR);
+	Encoder_Task(&EncoderL);
+	Encoder_Task(&EncoderR);
 	IS10MS = FALSE;
 }
 /* USER CODE END 0 */
@@ -490,7 +494,6 @@ int main(void)
   /* USER CODE BEGIN Init */
   MPU6050.isInit = FALSE;
   Display.isInit = FALSE;
-
   Display.state = INIT;
   /* USER CODE END Init */
 
@@ -544,6 +547,7 @@ int main(void)
 		  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"MPU6050 INIT", 12);
 	  }else{
 		  MPU6050_Calibrate(&MPU6050);
+		  MPU6050.isInit = TRUE;
 	  }
   }
   /* FIN INICIALIZACIÓN DE MPU6050 */
@@ -558,6 +562,7 @@ int main(void)
 	  }else{
 		  Display_DrawBitmap(0,0, uner_logo, 128, 64, 1);
 		  Display.isInit = TRUE;
+		  Display.timer = HAL_GetTick();
 	  }
   }
   /* FIN INICIALIZACIÓN DISPLAY */
@@ -572,7 +577,7 @@ int main(void)
   /* FIN INICIALIZACIÓN DE MOTORES Y ENCODERS */
 
   Car.state = IDLE;
-  Display.timer = HAL_GetTick();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -1062,21 +1067,21 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){ //			1/4000s
 	}
 	if(htim->Instance == TIM3){
 		IS10MS = TRUE;
-		Motor_Break_Timeout(&MotorL);
-		Motor_Break_Timeout(&MotorR);
-		Encoder_Task(&EncoderL);
-		Encoder_Task(&EncoderR);
+
+	}
+}
+
+void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c){
+	if(hi2c->Devaddress == SSD1306_I2C_ADDR){
+		Display_I2C_DMA_Ready(TRUE);
 	}
 }
 
 void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c){
 	if(hi2c->Devaddress == MPU6050_ADDR){
 		MPU6050_I2C_DMA_Cplt(&MPU6050);
+		Display_I2C_DMA_Ready(TRUE);
 	}
-	if(hi2c->Devaddress == SSD1306_I2C_ADDR){
-
-	}
-	Display_I2C_DMA_Ready(TRUE);
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){

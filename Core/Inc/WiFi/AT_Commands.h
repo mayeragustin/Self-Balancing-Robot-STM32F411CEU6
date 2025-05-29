@@ -7,7 +7,7 @@
 
 #ifndef INC_WIFI_AT_COMMANDS_H_
 #define INC_WIFI_AT_COMMANDS_H_
-
+/*
 #include "utilities.h"
 
 
@@ -19,5 +19,5 @@ typedef enum{
 }AT_STATUS;
 
 AT_STATUS AT_WriteCMD();
-
+*/
 #endif /* INC_WIFI_AT_COMMANDS_H_ */

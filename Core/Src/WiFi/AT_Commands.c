@@ -8,8 +8,8 @@
 
 #include "WiFi/AT_Commands.h"
 
-uint8_t *AT_CMD_Buffer;
-e_system (*AT_Send_To_UART)(uint8_t *buff, uint16_t len);
+//uint8_t *AT_CMD_Buffer;
+//e_system (*AT_Send_To_UART)(uint8_t *buff, uint16_t len);
 /*
 AT_STATUS AT_WriteCMD(){
 	switch(){

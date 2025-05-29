@@ -54,7 +54,6 @@ typedef enum{
 struct{
 	uint8_t Ready_To_Refresh;
 	uint8_t Ready_DMA;
-	uint8_t Ready_MPU_data;
 	uint8_t Page;
 	e_state state;
 	uint8_t PageData[6];
@@ -113,12 +112,11 @@ e_system Display_Init(){
 	SSD1306.CurrentY = 0;
 
 	/* Initialized OK */
-	SSD1306.Initialized = 1;
+	SSD1306.Initialized = TRUE;
 
 	Update.state = PAGE;
 	Update.Page = 0;
-	Update.Ready_DMA = FALSE;
-	Update.Ready_MPU_data = FALSE;
+	Update.Ready_DMA = TRUE;
 	Update.Ready_To_Refresh = FALSE;
 
 	Update.PageData[0] = 0xB0 + Update.Page;
