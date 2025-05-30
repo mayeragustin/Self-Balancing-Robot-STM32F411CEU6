@@ -178,7 +178,7 @@ void Display_ShowBitmap(const unsigned char bitmap[]);
  */
 void Display_SetCursor(uint8_t x, uint8_t y);
 
-<<<<<<< HEAD
+
 /**
  * @brief Escribe una cadena de caracteres en la pantalla con una fuente y color.
  *
@@ -187,8 +187,8 @@ void Display_SetCursor(uint8_t x, uint8_t y);
  * @param color Color del texto.
  * @return Último carácter impreso (o 0 si falló).
  */
-=======
->>>>>>> 5ef2b499ed81eda5f9e6b9a46339a7875d4cf8bf
+
+
 char Display_WriteString(char* str, FontDef_t Font, SSD1306_COLOR_t color);
 
 /**

@@ -1,5 +1,0 @@
-../Core/Src/WiFi/AT_Commands.c:33:6:AT_Set_UART_Comm	1
-../Core/Src/WiFi/AT_Commands.c:37:6:AT_Get_Data	1
-../Core/Src/WiFi/AT_Commands.c:41:6:AT_CMD_Task	2
-../Core/Src/WiFi/AT_Commands.c:50:10:AT_Send_Command	3
-../Core/Src/WiFi/AT_Commands.c:74:10:AT_Alive	2

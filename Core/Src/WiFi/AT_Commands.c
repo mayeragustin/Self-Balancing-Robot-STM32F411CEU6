@@ -10,15 +10,15 @@
 #include "utilities.h"
 #include <stdint.h>
 
-<<<<<<< HEAD
+
 #define TX_BUFFER		256
 /*
 typedef struct{
 	void
 }s_Parameter;*/
 
-=======
-<<<<<<< HEAD
+
+
 //uint8_t *AT_CMD_Buffer;
 //e_system (*AT_Send_To_UART)(uint8_t *buff, uint16_t len);
 /*
@@ -29,15 +29,14 @@ AT_STATUS AT_WriteCMD(){
 		//case 1;
 		break;
 	case 1: // esperar a recibir el ok desde uart si timeout, case 4
-=======
-#define TX_BUFFER		256
->>>>>>> 3ede334a79d198cd1ab9095a598e9b3782bdaf42
 
-/*typedef struct{
+#define TX_BUFFER		256
+
+typedef struct{
 	void
 }s_Parameter;*/
 
->>>>>>> 5ef2b499ed81eda5f9e6b9a46339a7875d4cf8bf
+/*
 typedef struct{
 	uint8_t buffer[TX_BUFFER];
 	uint8_t iRead;
@@ -106,3 +105,4 @@ e_system AT_Alive(void (*CallBack)(void *data)){
 		return SYS_BUSY;
 	}
 }
+*/

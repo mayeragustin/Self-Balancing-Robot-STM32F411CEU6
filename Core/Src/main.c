@@ -338,74 +338,31 @@ void OLED_Print_Data_Task(){
 				}
 			}
 
-<<<<<<< HEAD
+
 			if(MPU6050.isInit){
 				MPU6050.Acc.x = (MPU6050.Acc.x >> 14) * 9.8f;
 				MPU6050.Acc.y = (MPU6050.Acc.y >> 14) * 9.8f;
 				MPU6050.Acc.z = (MPU6050.Acc.z >> 14) * 9.8f;
-				sprintf(Display.auxString, "Ax:%d", MPU6050.Acc.x);
+				sprintf((char*)Display.auxString, "Ax:%d", MPU6050.Acc.x);
 				Display_SetCursor(25, 17);
-				Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-				sprintf(Display.auxString, "Ay:%d", MPU6050.Acc.y);
+				Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+				sprintf((char*)Display.auxString, "Ay:%d", MPU6050.Acc.y);
 				Display_SetCursor(25, 34);
-				Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-				sprintf(Display.auxString, "Az:%d", MPU6050.Acc.z);
+				Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+				sprintf((char*)Display.auxString, "Az:%d", MPU6050.Acc.z);
 				Display_SetCursor(25, 51);
-				Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-				sprintf(Display.auxString, "Gx:%d", MPU6050.Gyro.x);
+				Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+				sprintf((char*)Display.auxString, "Gx:%d", MPU6050.Gyro.x);
 				Display_SetCursor(73, 17);
-				Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-				sprintf(Display.auxString, "Gy:%d", MPU6050.Gyro.y);
+				Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+				sprintf((char*)Display.auxString, "Gy:%d", MPU6050.Gyro.y);
 				Display_SetCursor(73, 34);
-				Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-				sprintf(Display.auxString, "Gz:%d", MPU6050.Gyro.z);
+				Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+				sprintf((char*)Display.auxString, "Gz:%d", MPU6050.Gyro.z);
 				Display_SetCursor(73, 51);
-				Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+				Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
 			}
-=======
 
-			MPU6050.Acc.x = (MPU6050.Acc.x >> 14) * 9.8f;
-			MPU6050.Acc.y = (MPU6050.Acc.y >> 14) * 9.8f;
-			MPU6050.Acc.z = (MPU6050.Acc.z >> 14) * 9.8f;
-
-			sprintf((char*)Display.auxString, "Ax:%d", MPU6050.Acc.x);
-			Display_SetCursor(25, 17);
-<<<<<<< HEAD
-			Display_WriteString((char*)&Display.auxString[0], Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf((char*)Display.auxString, "Ay:%d", MPU6050.Acc.y);
-			Display_SetCursor(25, 34);
-			Display_WriteString((char*)&Display.auxString[0], Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf((char*)Display.auxString, "Az:%d", MPU6050.Acc.z);
-			Display_SetCursor(25, 51);
-			Display_WriteString((char*)&Display.auxString[0], Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf((char*)Display.auxString, "Gx:%d", MPU6050.Gyro.x);
-			Display_SetCursor(73, 17);
-			Display_WriteString((char*)&Display.auxString[0], Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf((char*)Display.auxString, "Gy:%d", MPU6050.Gyro.y);
-			Display_SetCursor(73, 34);
-			Display_WriteString((char*)&Display.auxString[0], Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf((char*)Display.auxString, "Gz:%d", MPU6050.Gyro.z);
-			Display_SetCursor(73, 51);
-			Display_WriteString((char*)&Display.auxString[0], Font_7x10, SSD1306_COLOR_WHITE);
-=======
-			Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf((char*)Display.auxString, "Ay:%d", MPU6050.Acc.y);
-			Display_SetCursor(25, 34);
-			Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf((char*)Display.auxString, "Az:%d", MPU6050.Acc.z);
-			Display_SetCursor(25, 51);
-			Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf((char*)Display.auxString, "Gx:%d", MPU6050.Gyro.x);
-			Display_SetCursor(73, 17);
-			Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf((char*)Display.auxString, "Gy:%d", MPU6050.Gyro.y);
-			Display_SetCursor(73, 34);
-			Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf((char*)Display.auxString, "Gz:%d", MPU6050.Gyro.z);
-			Display_SetCursor(73, 51);
-			Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
->>>>>>> 3ede334a79d198cd1ab9095a598e9b3782bdaf42
->>>>>>> 5ef2b499ed81eda5f9e6b9a46339a7875d4cf8bf
 			break;
 		}
 	}
@@ -529,12 +486,12 @@ void onKeyChangeState(e_Estados value){
 void task_10ms(){
 
 	Debouncer_Task();
-<<<<<<< HEAD
+
 
 	Encoder_Task(&EncoderL);
 	Encoder_Task(&EncoderR);
 
-=======
+
 	Motor_Break_Timeout(&MotorL);
 	Motor_Break_Timeout(&MotorR);
 	Encoder_Task(&EncoderL);
@@ -542,7 +499,7 @@ void task_10ms(){
 
 	IS10MS = FALSE;
 
->>>>>>> 5ef2b499ed81eda5f9e6b9a46339a7875d4cf8bf
+
 	is100ms1--;
 	if(!is100ms1){
 		is100ms1 = 10;
@@ -554,20 +511,19 @@ void task_10ms(){
 			is1s = 10;
 			Encoder_1s_Elapsed(&EncoderL);
 			Encoder_1s_Elapsed(&EncoderR);
-<<<<<<< HEAD
-=======
+
+
 
 			is30s--;
 			if(!is30s){
 				is30s = 30;
 				//BateryLevel_Task();
 			}
->>>>>>> 5ef2b499ed81eda5f9e6b9a46339a7875d4cf8bf
 		}
 	}
-<<<<<<< HEAD
 
-<<<<<<< HEAD
+
+
 	Display.refreshCounter--;
 	if(!Display.refreshCounter){
 		Display.refreshCounter = Display.refreshRate;
@@ -576,16 +532,15 @@ void task_10ms(){
 
 	Motor_Break_Timeout(&MotorL);
 	Motor_Break_Timeout(&MotorR);
-=======
+
 	Debouncer_Task();
 	Motor_Break_Timeout(&MotorL);
 	Motor_Break_Timeout(&MotorR);
 	Encoder_Task(&EncoderL);
 	Encoder_Task(&EncoderR);
->>>>>>> 5ef2b499ed81eda5f9e6b9a46339a7875d4cf8bf
 	IS10MS = FALSE;
-=======
->>>>>>> 3ede334a79d198cd1ab9095a598e9b3782bdaf42
+
+
 }
 /* USER CODE END 0 */
 
@@ -642,9 +597,9 @@ int main(void)
 
   Init_Timing();
 
-<<<<<<< HEAD
+
   Init_MPU6050();
-=======
+
   /* INICIALIZACIÓN DE MPU6050 */
   /*if(HAL_I2C_IsDeviceReady(&hi2c1, MPU6050_ADDR, 1, 10000) != HAL_OK){
 	  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"MPU6050 READY", 13);
@@ -673,7 +628,7 @@ int main(void)
 	  }
   }
   /* FIN INICIALIZACIÓN DISPLAY */
->>>>>>> 5ef2b499ed81eda5f9e6b9a46339a7875d4cf8bf
+
 
   Init_Display();
 
@@ -686,10 +641,9 @@ int main(void)
   /* FIN INICIALIZACIÓN DE MOTORES Y ENCODERS */
 
   Car.state = IDLE;
-<<<<<<< HEAD
 
-=======
->>>>>>> 3ede334a79d198cd1ab9095a598e9b3782bdaf42
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -1255,9 +1209,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){ //			1/4000s
 	}
 	if(htim->Instance == TIM3){
 		IS10MS = TRUE;
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
+
+
+
 
 	}
 }
@@ -1265,9 +1219,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){ //			1/4000s
 void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c){
 	if(hi2c->Devaddress == SSD1306_I2C_ADDR){
 		Display_I2C_DMA_Ready(TRUE);
-=======
->>>>>>> 3ede334a79d198cd1ab9095a598e9b3782bdaf42
->>>>>>> 5ef2b499ed81eda5f9e6b9a46339a7875d4cf8bf
+
 	}
 }
 
@@ -1276,18 +1228,17 @@ void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c){
 		MPU6050_I2C_DMA_Cplt(&MPU6050);
 		Display_I2C_DMA_Ready(TRUE);
 	}
-<<<<<<< HEAD
-=======
+
+
 	if(hi2c->Devaddress == SSD1306_I2C_ADDR){
 		if(!MPU6050.isInit){
 			Display_I2C_DMA_Ready(TRUE);
 		}
 	}
 
-<<<<<<< HEAD
-=======
->>>>>>> 3ede334a79d198cd1ab9095a598e9b3782bdaf42
->>>>>>> 5ef2b499ed81eda5f9e6b9a46339a7875d4cf8bf
+
+
+
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
@@ -1303,13 +1254,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	}
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+/*void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	if(huart->Instance == USART1){
 		//dataTx = dataRx;
 		HAL_UART_Receive_IT(&huart1, &dataRx, 1);
 		dataRx = 0;
 	}
-}
+}*/
 /**************************************** END HAL CALLBACKS ***************************************/
 /*************************************** HARDWARE ABSTRACTION ************************************/
 e_system I2C_1_Abstract_Mem_DMA_Transmit(uint16_t Dev_Address, uint8_t reg, uint8_t *p_Data, uint16_t _Size){

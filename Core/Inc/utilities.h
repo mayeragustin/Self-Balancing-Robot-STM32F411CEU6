@@ -32,17 +32,10 @@
  * @brief Estados generales del sistema.
  */
 typedef enum{
-<<<<<<< HEAD
 	SYS_OK,     /**< El sistema se encuentra en estado correcto. */
 	SYS_ERROR,  /**< Ocurrió un error en el sistema. */
 	SYS_BUSY    /**< El sistema está ocupado procesando. */
 } e_system;
-=======
-	SYS_OK,
-	SYS_ERROR,
-	SYS_BUSY
-}e_system;
->>>>>>> 5ef2b499ed81eda5f9e6b9a46339a7875d4cf8bf
 
 /**
  * @union u_flag
@@ -69,7 +62,7 @@ typedef union{
 		uint8_t H: 4; /**< Nibble alto (bits 4 a 7) */
 	} nibble;
 	uint8_t byte; /**< Acceso completo al byte */
-} u_flag;
+}u_flag;
 
 /**
  * @union u_conv

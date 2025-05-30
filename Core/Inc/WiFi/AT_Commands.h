@@ -27,17 +27,14 @@ AT_STATUS AT_WriteCMD();
 AT_STATUS AT_WriteCMD();
 <<<<<<< HEAD
 */
-=======
-
->>>>>>> 5ef2b499ed81eda5f9e6b9a46339a7875d4cf8bf
-void AT_Set_UART_Communication(void (*Tx_Func)(uint8_t *buff, uint8_t *indexRead, uint8_t indexWrite));
+//void AT_Set_UART_Communication(void (*Tx_Func)(uint8_t *buff, uint8_t *indexRead, uint8_t indexWrite));
 
 /**
  * @brief Esta función agrega un dato al buffer de recepción
  *
  * @param data: valor recibido
  */
-void AT_Get_Data(uint8_t data);
+//void AT_Get_Data(uint8_t data);
 
 /**
  * void dataTo_PC(s_uartData* dataCom){
@@ -47,13 +44,9 @@ void AT_Get_Data(uint8_t data);
 }
  *
  */
-
+/*
 e_system AT_Send_Command(uint8_t *cmd, uint8_t len, void (*CallBack)(void *data), uint16_t timeout);
 
 e_system AT_Alive();
-
-<<<<<<< HEAD
-=======
->>>>>>> 3ede334a79d198cd1ab9095a598e9b3782bdaf42
->>>>>>> 5ef2b499ed81eda5f9e6b9a46339a7875d4cf8bf
+*/
 #endif /* INC_WIFI_AT_COMMANDS_H_ */

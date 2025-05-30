@@ -1,5 +1,0 @@
-../Core/Src/WiFi/AT_Commands.c:33:6:AT_Set_UART_Comm	16	static
-../Core/Src/WiFi/AT_Commands.c:37:6:AT_Get_Data	16	static
-../Core/Src/WiFi/AT_Commands.c:41:6:AT_CMD_Task	8	static
-../Core/Src/WiFi/AT_Commands.c:50:10:AT_Send_Command	32	static
-../Core/Src/WiFi/AT_Commands.c:74:10:AT_Alive	16	static
