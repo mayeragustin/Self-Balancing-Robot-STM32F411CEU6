@@ -35,18 +35,36 @@
 typedef enum{
     ACK=				0x0D,		/**< Confirmación de recepción exitosa */
 	NOCMD=				0x1D,		/**< Comando inexistente o no reconocido */
+
 	DEBUGER=			0xDE,		/**< Mensaje para depuración */
 	SYSERROR= 			0xEE,		/**< Error de sistema */
+
     GETALIVE=			0xF0,		/**< Solicitud de verificación de conexión (keep-alive) */
     FIRMWARE=			0xF1,		/**< Solicitud de versión de firmware */
+
+	SETPID=				0xC0,		/**< Seteo de variables de PID */
+
 	USERTEXT=			0xB1,		/**< Mensaje de texto definido por el usuario */
 	USERNUMBER= 		0xB2,		/**< Número definido por el usuario */
+
 	ADCSINGLE=			0xA0,		/**< Lectura de un valor ADC único */
 	ADCBLOCK=			0xA1,		/**< Lectura de un bloque de valores ADC */
 	SETMOTOR=			0xA2,		/**< Comando para control de motor */
 	GET_ENCODER=		0xA3,		/**< Solicitud de lectura de encoder */
 	MPUBLOCK=			0xA4
 }_eID;
+
+/**
+ * @brief Lista de PID configurables
+ *
+ * Esta lista se utiliza para identificar que valores de PID modificar desde la PC
+ */
+typedef enum PID_Index{
+	MOTORL= 			0,
+	MOTORR= 			1,
+	BALANCE= 			2,
+	LINE_FOLLOWER= 		3,
+}s_pid;
 
 /**
  * @brief Estados de la máquina de estados finitos (MEF) para decodificación de paquetes.
