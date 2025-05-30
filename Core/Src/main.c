@@ -50,11 +50,17 @@ typedef enum{
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define RXBUF					data->Rx.buffer
-#define RXCMD					data->indexStart+POSID
+#define DISPLAY_TYPICAL_REFRESH_RATE_10MS		10 	//< 100ms de periodo, 10FPS
+#define DISPLAY_MEDIUM_REFRESH_RATE_10MS		20 	//< 250ms de periodo, 5FPS
+#define DISPLAY_LOW_REFRESH_RATE_10MS			100 //< 1000ms de periodo, 1FPS
 
-#define IS10MS					generalFlags.bit.b0
-#define IS5MS					generalFlags.bit.b1
+#define ENCODER_FASTPPS_COUNTER_10MS			10 //< Toma el valor de los encoders cada 100ms
+
+#define RXBUF									data->Rx.buffer
+#define RXCMD									data->indexStart+POSID
+
+#define IS10MS									generalFlags.bit.b0
+#define IS5MS									generalFlags.bit.b1
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -73,6 +79,8 @@ DMA_HandleTypeDef hdma_i2c1_rx;
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim3;
 
+UART_HandleTypeDef huart1;
+
 /* USER CODE BEGIN PV */
 
 //uint8_t DMA_BUFFER[1048];
@@ -81,7 +89,9 @@ uint32_t pepe;
 
 u_flag generalFlags;
 
-uint8_t is100ms1 = 10, is1s = 10, is5ms = 20, is30s = 30;
+uint8_t is100ms1 = 10, is1s = 10, is5ms = 20;
+
+uint16_t is30s = 300;
 
 u_conv decom;
 
@@ -99,6 +109,8 @@ struct{
 	uint8_t state;
 	uint32_t timer;
 	uint8_t auxString[10];
+	uint8_t refreshRate;
+	uint8_t refreshCounter;
 }Display;
 
 struct{
@@ -115,6 +127,8 @@ struct USB_DATA{
 struct CAR_DATA{
 	e_Car_state state;
 }Car;
+
+uint8_t	dataRx;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -125,12 +139,22 @@ static void MX_ADC1_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
+void Init_Timing();
+void Init_MPU6050();
+void Init_Display();
 
 /* HAL FUNCTIONS */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
 
+void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c);
+
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc);
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
 /* END HAL FUNCTIONS */
 
 /**
@@ -271,15 +295,15 @@ e_system I2C_1_Abstract_Mem_Read_Blocking(uint16_t Dev_Address, uint8_t Mem_Adre
   */
 e_system I2C_1_Abstract_Mem_Write_Blocking(uint16_t Dev_Address, uint8_t Mem_Adress, uint8_t Mem_AddSize, uint8_t *p_Data, uint16_t _Size, uint32_t _Timeout);
 
-void OLED_Task();
+void OLED_Print_Data_Task();
 
-void BateryLevel_Task();
+void BateryLevel_Set();
 /************************************ FIN FUNCIONES PARA ABSTRACCIÓN DE HARDWARE ************************************/
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void OLED_Task(){
+void OLED_Print_Data_Task(){
 	if(Display.isInit){
 		switch(Display.state){
 		case INIT:
@@ -311,32 +335,38 @@ void OLED_Task(){
 			MPU6050.Acc.y = (MPU6050.Acc.y >> 14) * 9.8f;
 			MPU6050.Acc.z = (MPU6050.Acc.z >> 14) * 9.8f;
 
-			sprintf(Display.auxString, "Ax:%d", MPU6050.Acc.x);
+			sprintf((char*)Display.auxString, "Ax:%d", MPU6050.Acc.x);
 			Display_SetCursor(25, 17);
-			Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf(Display.auxString, "Ay:%d", MPU6050.Acc.y);
+			Display_WriteString((char*)&Display.auxString[0], Font_7x10, SSD1306_COLOR_WHITE);
+			sprintf((char*)Display.auxString, "Ay:%d", MPU6050.Acc.y);
 			Display_SetCursor(25, 34);
-			Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf(Display.auxString, "Az:%d", MPU6050.Acc.z);
+			Display_WriteString((char*)&Display.auxString[0], Font_7x10, SSD1306_COLOR_WHITE);
+			sprintf((char*)Display.auxString, "Az:%d", MPU6050.Acc.z);
 			Display_SetCursor(25, 51);
-			Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf(Display.auxString, "Gx:%d", MPU6050.Gyro.x);
+			Display_WriteString((char*)&Display.auxString[0], Font_7x10, SSD1306_COLOR_WHITE);
+			sprintf((char*)Display.auxString, "Gx:%d", MPU6050.Gyro.x);
 			Display_SetCursor(73, 17);
-			Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf(Display.auxString, "Gy:%d", MPU6050.Gyro.y);
+			Display_WriteString((char*)&Display.auxString[0], Font_7x10, SSD1306_COLOR_WHITE);
+			sprintf((char*)Display.auxString, "Gy:%d", MPU6050.Gyro.y);
 			Display_SetCursor(73, 34);
-			Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
-			sprintf(Display.auxString, "Gz:%d", MPU6050.Gyro.z);
+			Display_WriteString((char*)&Display.auxString[0], Font_7x10, SSD1306_COLOR_WHITE);
+			sprintf((char*)Display.auxString, "Gz:%d", MPU6050.Gyro.z);
 			Display_SetCursor(73, 51);
-			Display_WriteString(Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
+			Display_WriteString((char*)&Display.auxString[0], Font_7x10, SSD1306_COLOR_WHITE);
 			break;
 		}
+	}
+
+	is30s--;
+	if(!is30s){
+		is30s = 300;
+		BateryLevel_Set();
 	}
 
 	Display_I2C_Refresh_Ready(TRUE);
 }
 
-void BateryLevel_Task(){
+void BateryLevel_Set(){
 	Display_DrawFilledRectangle(3, 4, 6, 9, SSD1306_COLOR_BLACK);
 	if(Analog.value[8] >= 3900){
 		Display_DrawFilledRectangle(3, 4, 6, 9, SSD1306_COLOR_WHITE);
@@ -434,7 +464,7 @@ void decodeOn_USB(s_commData *data){
 		comm_sendCMD(data, MPUBLOCK, data->auxBuffer, 12);
 		break;
 	default:
-		comm_sendCMD(data, SYSERROR, (uint8_t*)"NO CMD", 17);
+		comm_sendCMD(data, SYSERROR, (uint8_t*)"NO CMD", 6);
 		break;
 	}
 }
@@ -444,29 +474,34 @@ void onKeyChangeState(e_Estados value){
 }
 
 void task_10ms(){
+
+	Debouncer_Task();
+
+	Encoder_Task(&EncoderL);
+	Encoder_Task(&EncoderR);
+
 	is100ms1--;
 	if(!is100ms1){
 		is100ms1 = 10;
 
 		HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
 
-		OLED_Task();
-
 		is1s--;
 		if(!is1s){
 			is1s = 10;
 			Encoder_1s_Elapsed(&EncoderL);
 			Encoder_1s_Elapsed(&EncoderR);
-
-			is30s--;
-			if(!is30s){
-				is30s = 30;
-				BateryLevel_Task();
-			}
 		}
 	}
 
-	Debouncer_Task();
+	Display.refreshCounter--;
+	if(!Display.refreshCounter){
+		Display.refreshCounter = Display.refreshRate;
+		OLED_Print_Data_Task();
+	}
+
+	Motor_Break_Timeout(&MotorL);
+	Motor_Break_Timeout(&MotorR);
 	IS10MS = FALSE;
 }
 /* USER CODE END 0 */
@@ -509,10 +544,13 @@ int main(void)
   MX_TIM1_Init();
   MX_I2C1_Init();
   MX_TIM3_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   /* INICIALIZACIÓN DE PROTOCOLO MEDIANTE USB */
   Comm_Init(&USB.data, &decodeOn_USB, &writeOn_USB);
   CDC_Attach_Rx(&dataRxOn_USB);
+
+  HAL_UART_Receive_IT(&huart1, &dataRx, 1);
   /* FIN INICIALIZACIÓN DE PROTOCOLO MEDIANTE USB */
 
   /* INICIALIZACIÓN DE USER KEY Y DEBOUNCE */
@@ -520,55 +558,18 @@ int main(void)
   key = Debounce_Add(&KEY_Read_Value, &onKeyChangeState);
   /* FIN INICIALIZACIÓN DE USER KEY Y DEBOUNCE */
 
-  /* INICIALIZACIÓN DE TIMERS Y PWM*/
-  if(HAL_TIM_Base_Start_IT(&htim1) != HAL_OK){
-	  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"TIM1 INIT", 9);
-  }
-  if(HAL_TIM_Base_Start_IT(&htim3) != HAL_OK){
-  	  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"TIM3 INIT BASE", 14);
-  }
-  if(HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1) != HAL_OK){
-	  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"TIM3 INIT PWM1", 14);
-  }
-  if(HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2) != HAL_OK){
-	  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"TIM3 INIT PWM2", 14);
-  }
-  /* FIN INICIALIZACIÓN DE TIMERS Y PWM*/
+  Init_Timing();
 
-  /* INICIALIZACIÓN DE MPU6050 */
-  if(HAL_I2C_IsDeviceReady(&hi2c1, MPU6050_ADDR, 1, 10000) != HAL_OK){
-	  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"MPU6050 READY", 13);
-  }else{
-	  MPU6050_Set_I2C_Communication(&I2C_1_Abstract_Mem_Write_Blocking, &I2C_1_Abstract_Mem_Read_Blocking);
-	  if(MPU6050_Init(&MPU6050) != SYS_OK){
-		  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"MPU6050 INIT", 12);
-	  }else{
-		  MPU6050_Calibrate(&MPU6050);
-	  }
-  }
-  /* FIN INICIALIZACIÓN DE MPU6050 */
+  Init_MPU6050();
 
-  /* INICIALIZACIÓN DISPLAY*/
-  if(HAL_I2C_IsDeviceReady(&hi2c1, SSD1306_I2C_ADDR, 1, 10000) != HAL_OK){
-	  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"I2C READY", 9);
-  }else{
-	  Display_Set_I2C_Master_Transmit(&I2C_1_Abstract_Mem_DMA_Transmit, &I2C_1_Abstract_Master_Transmit_Blocking);
-	  if(Display_Init() != SYS_OK){
-		  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"OLED INIT", 9);
-	  }else{
-		  Display_DrawBitmap(0,0, uner_logo, 128, 64, 1);
-		  Display.isInit = TRUE;
-	  }
-  }
-  /* FIN INICIALIZACIÓN DISPLAY */
-
+  Init_Display();
 
   /* INICIALIZACIÓN DE MOTORES Y ENCODERS */
   Motor_Init(&MotorL, &Motor_Left_SetPWM , &Motor_Left_SetPins , htim3.Instance->ARR);
   Motor_Init(&MotorR, &Motor_Right_SetPWM, &Motor_Right_SetPins, htim3.Instance->ARR);
 
-  Encoder_Init(&EncoderL, 10);
-  Encoder_Init(&EncoderR, 10);
+  Encoder_Init(&EncoderL, ENCODER_FASTPPS_COUNTER_10MS);
+  Encoder_Init(&EncoderR, ENCODER_FASTPPS_COUNTER_10MS);
   /* FIN INICIALIZACIÓN DE MOTORES Y ENCODERS */
 
   Car.state = IDLE;
@@ -923,6 +924,39 @@ static void MX_TIM3_Init(void)
 }
 
 /**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
   * Enable DMA controller clock
   */
 static void MX_DMA_Init(void)
@@ -1025,14 +1059,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(M2_IN2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : ESP_RX_Pin ESP_TX_Pin */
-  GPIO_InitStruct.Pin = ESP_RX_Pin|ESP_TX_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
@@ -1046,7 +1072,57 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-/* HAL CALLBACKS */
+/************************************ USER INIT FUNCTIONS ****************************************/
+/* INICIALIZACIÓN DE TIMERS Y PWM*/
+void Init_Timing(){
+	  if(HAL_TIM_Base_Start_IT(&htim1) != HAL_OK){
+		  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"TIM1 INIT", 9);
+	  }
+	  if(HAL_TIM_Base_Start_IT(&htim3) != HAL_OK){
+	  	  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"TIM3 INIT BASE", 14);
+	  }
+	  if(HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1) != HAL_OK){
+		  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"TIM3 INIT PWM1", 14);
+	  }
+	  if(HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2) != HAL_OK){
+		  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"TIM3 INIT PWM2", 14);
+	  }
+}
+/* FIN INICIALIZACIÓN DE TIMERS Y PWM*/
+/* INICIALIZACIÓN DE MPU6050 */
+void Init_MPU6050(){
+	if(HAL_I2C_IsDeviceReady(&hi2c1, MPU6050_ADDR, 1, 10000) != HAL_OK){
+		comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"MPU6050 READY", 13);
+	}else{
+		MPU6050_Set_I2C_Communication(&I2C_1_Abstract_Mem_Write_Blocking, &I2C_1_Abstract_Mem_Read_Blocking);
+		if(MPU6050_Init(&MPU6050) != SYS_OK){
+			comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"MPU6050 INIT", 12);
+		}else{
+			MPU6050_Calibrate(&MPU6050);
+		}
+	}
+}
+/* FIN INICIALIZACIÓN DE MPU6050 */
+/* INICIALIZACIÓN DISPLAY*/
+void Init_Display(){
+	Display.refreshCounter = DISPLAY_TYPICAL_REFRESH_RATE_10MS;
+	Display.refreshRate = DISPLAY_TYPICAL_REFRESH_RATE_10MS;
+
+	if(HAL_I2C_IsDeviceReady(&hi2c1, SSD1306_I2C_ADDR, 1, 10000) != HAL_OK){
+		comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"OLED READY", 10);
+	}else{
+		Display_Set_I2C_Master_Transmit(&I2C_1_Abstract_Mem_DMA_Transmit, &I2C_1_Abstract_Master_Transmit_Blocking);
+		if(Display_Init() != SYS_OK){
+			comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"OLED INIT", 9);
+		}else{
+			Display_DrawBitmap(0,0, uner_logo, 128, 64, 1);
+			Display.isInit = TRUE;
+		}
+	}
+}
+/* FIN INICIALIZACIÓN DISPLAY */
+/************************************ END USER INIT FUNCTIONS ****************************************/
+/**************************************** HAL CALLBACKS ***************************************/
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){ //			1/4000s
 	if(htim->Instance == TIM1){
 
@@ -1062,21 +1138,18 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){ //			1/4000s
 	}
 	if(htim->Instance == TIM3){
 		IS10MS = TRUE;
-		Motor_Break_Timeout(&MotorL);
-		Motor_Break_Timeout(&MotorR);
-		Encoder_Task(&EncoderL);
-		Encoder_Task(&EncoderR);
 	}
 }
 
 void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c){
 	if(hi2c->Devaddress == MPU6050_ADDR){
 		MPU6050_I2C_DMA_Cplt(&MPU6050);
+		Display_I2C_DMA_Ready(TRUE);
 	}
 	if(hi2c->Devaddress == SSD1306_I2C_ADDR){
 
 	}
-	Display_I2C_DMA_Ready(TRUE);
+
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
@@ -1091,8 +1164,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
     	Encoder_Add_Pulse(&EncoderR);
 	}
 }
-/* FIN HAL CALLBACKS */
 
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+	if(huart->Instance == USART1){
+		//dataTx = dataRx;
+		HAL_UART_Receive_IT(&huart1, &dataRx, 1);
+		dataRx = 0;
+	}
+}
+/**************************************** END HAL CALLBACKS ***************************************/
+/*************************************** HARDWARE ABSTRACTION ************************************/
 e_system I2C_1_Abstract_Mem_DMA_Transmit(uint16_t Dev_Address, uint8_t reg, uint8_t *p_Data, uint16_t _Size){
 	return (e_system)HAL_I2C_Mem_Write_DMA(&hi2c1, Dev_Address, reg, 1, p_Data, _Size);
 }
@@ -1185,7 +1266,7 @@ void Motor_Left_SetPWM(uint16_t dCycle){
 void Motor_Right_SetPWM(uint16_t dCycle){
 	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, dCycle);
 }
-
+/*************************************** END HARDWARE ABSTRACTION ************************************/
 /* USER CODE END 4 */
 
 /**

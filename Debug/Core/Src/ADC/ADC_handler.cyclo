@@ -1,2 +1,2 @@
-../Core/Src/ADC/ADC_handler.c:18:6:ADC_Conversion_Cplt	2
-../Core/Src/ADC/ADC_handler.c:29:6:ADC_Linealization	1
+../Core/Src/ADC/ADC_handler.c:51:6:ADC_Conversion_Cplt	2
+../Core/Src/ADC/ADC_handler.c:62:6:ADC_Linealization	1

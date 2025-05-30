@@ -308,7 +308,7 @@ char Display_WriteChar(char ch, FontDef_t Font, SSD1306_COLOR_t color)
 /**
  * WRITE STRING INTO THE DISPLAY BUFFER
  */
-char Display_WriteString(const char* str, FontDef_t Font, SSD1306_COLOR_t color)
+char Display_WriteString(char* str, FontDef_t Font, SSD1306_COLOR_t color)
 {
     while (*str){
         if (Display_WriteChar(*str, Font, color) != *str)	// Write until null-byte
