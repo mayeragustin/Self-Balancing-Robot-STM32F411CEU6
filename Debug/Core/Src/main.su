@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ../Core/Src/main.c:306:6:OLED_Print_Data_Task	24	static
 ../Core/Src/main.c:369:6:BateryLevel_Set	16	static
 ../Core/Src/main.c:382:6:decodeOn_USB	24	static
@@ -32,3 +33,69 @@
 ../Core/Src/main.c:1262:6:Motor_Left_SetPWM	16	static
 ../Core/Src/main.c:1266:6:Motor_Right_SetPWM	16	static
 ../Core/Src/main.c:1276:6:Error_Handler	4	static,ignoring_inline_asm
+=======
+<<<<<<< HEAD
+../Core/Src/main.c:282:6:OLED_Task	24	static
+../Core/Src/main.c:339:6:BateryLevel_Task	16	static
+../Core/Src/main.c:352:6:decodeOn_USB	24	static
+../Core/Src/main.c:442:6:onKeyChangeState	16	static
+../Core/Src/main.c:446:6:task_10ms	8	static
+../Core/Src/main.c:482:5:main	16	static
+../Core/Src/main.c:618:6:SystemClock_Config	88	static
+../Core/Src/main.c:668:13:MX_ADC1_Init	24	static
+../Core/Src/main.c:792:13:MX_I2C1_Init	8	static
+../Core/Src/main.c:826:13:MX_TIM1_Init	32	static
+../Core/Src/main.c:872:13:MX_TIM3_Init	64	static
+../Core/Src/main.c:933:13:MX_DMA_Init	16	static
+../Core/Src/main.c:958:13:MX_GPIO_Init	48	static
+../Core/Src/main.c:1055:6:HAL_TIM_PeriodElapsedCallback	24	static
+../Core/Src/main.c:1074:6:HAL_I2C_MemTxCpltCallback	16	static
+../Core/Src/main.c:1080:6:HAL_I2C_MemRxCpltCallback	16	static
+../Core/Src/main.c:1087:6:HAL_ADC_ConvCpltCallback	16	static
+../Core/Src/main.c:1091:6:HAL_GPIO_EXTI_Callback	16	static
+../Core/Src/main.c:1101:10:I2C_1_Abstract_Mem_DMA_Transmit	32	static
+../Core/Src/main.c:1105:10:I2C_1_Abstract_Master_Transmit_Blocking	32	static
+../Core/Src/main.c:1109:10:I2C_1_Abstract_Mem_Write_Blocking	32	static
+../Core/Src/main.c:1113:10:I2C_1_Abstract_Mem_Read_Blocking	32	static
+../Core/Src/main.c:1117:9:KEY_Read_Value	8	static
+../Core/Src/main.c:1121:6:writeOn_USB	16	static
+../Core/Src/main.c:1132:6:dataRxOn_USB	24	static
+../Core/Src/main.c:1140:6:Motor_Left_SetPins	16	static
+../Core/Src/main.c:1163:6:Motor_Right_SetPins	16	static
+../Core/Src/main.c:1186:6:Motor_Left_SetPWM	16	static
+../Core/Src/main.c:1190:6:Motor_Right_SetPWM	16	static
+../Core/Src/main.c:1200:6:Error_Handler	4	static,ignoring_inline_asm
+=======
+../Core/Src/main.c:135:6:HAL_UART_RxCpltCallback	16	static
+../Core/Src/main.c:295:6:OLED_Task	24	static
+../Core/Src/main.c:352:6:BateryLevel_Task	16	static
+../Core/Src/main.c:365:6:decodeOn_USB	24	static
+../Core/Src/main.c:455:6:onKeyChangeState	16	static
+../Core/Src/main.c:459:6:task_10ms	8	static
+../Core/Src/main.c:497:5:main	16	static
+../Core/Src/main.c:636:6:SystemClock_Config	88	static
+../Core/Src/main.c:686:13:MX_ADC1_Init	24	static
+../Core/Src/main.c:810:13:MX_I2C1_Init	8	static
+../Core/Src/main.c:844:13:MX_TIM1_Init	32	static
+../Core/Src/main.c:890:13:MX_TIM3_Init	64	static
+../Core/Src/main.c:953:13:MX_USART1_UART_Init	8	static
+../Core/Src/main.c:984:13:MX_DMA_Init	16	static
+../Core/Src/main.c:1009:13:MX_GPIO_Init	48	static
+../Core/Src/main.c:1098:6:HAL_TIM_PeriodElapsedCallback	24	static
+../Core/Src/main.c:1116:6:HAL_I2C_MemRxCpltCallback	16	static
+../Core/Src/main.c:1129:6:HAL_ADC_ConvCpltCallback	16	static
+../Core/Src/main.c:1133:6:HAL_GPIO_EXTI_Callback	16	static
+../Core/Src/main.c:1143:10:I2C_1_Abstract_Mem_DMA_Transmit	32	static
+../Core/Src/main.c:1147:10:I2C_1_Abstract_Master_Transmit_Blocking	32	static
+../Core/Src/main.c:1151:10:I2C_1_Abstract_Mem_Write_Blocking	32	static
+../Core/Src/main.c:1155:10:I2C_1_Abstract_Mem_Read_Blocking	32	static
+../Core/Src/main.c:1159:9:KEY_Read_Value	8	static
+../Core/Src/main.c:1163:6:writeOn_USB	16	static
+../Core/Src/main.c:1174:6:dataRxOn_USB	24	static
+../Core/Src/main.c:1182:6:Motor_Left_SetPins	16	static
+../Core/Src/main.c:1205:6:Motor_Right_SetPins	16	static
+../Core/Src/main.c:1228:6:Motor_Left_SetPWM	16	static
+../Core/Src/main.c:1232:6:Motor_Right_SetPWM	16	static
+../Core/Src/main.c:1242:6:Error_Handler	4	static,ignoring_inline_asm
+>>>>>>> 3ede334a79d198cd1ab9095a598e9b3782bdaf42
+>>>>>>> 5ef2b499ed81eda5f9e6b9a46339a7875d4cf8bf

@@ -7,7 +7,7 @@
 
 #ifndef INC_WIFI_AT_COMMANDS_H_
 #define INC_WIFI_AT_COMMANDS_H_
-
+/*
 #include "utilities.h"
 
 
@@ -18,9 +18,18 @@ typedef enum{
 	AT_SENT
 }AT_STATUS;
 
+<<<<<<< HEAD
 
 AT_STATUS AT_WriteCMD();
 
+=======
+
+AT_STATUS AT_WriteCMD();
+<<<<<<< HEAD
+*/
+=======
+
+>>>>>>> 5ef2b499ed81eda5f9e6b9a46339a7875d4cf8bf
 void AT_Set_UART_Communication(void (*Tx_Func)(uint8_t *buff, uint8_t *indexRead, uint8_t indexWrite));
 
 /**
@@ -43,4 +52,8 @@ e_system AT_Send_Command(uint8_t *cmd, uint8_t len, void (*CallBack)(void *data)
 
 e_system AT_Alive();
 
+<<<<<<< HEAD
+=======
+>>>>>>> 3ede334a79d198cd1ab9095a598e9b3782bdaf42
+>>>>>>> 5ef2b499ed81eda5f9e6b9a46339a7875d4cf8bf
 #endif /* INC_WIFI_AT_COMMANDS_H_ */

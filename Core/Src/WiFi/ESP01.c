@@ -7,7 +7,7 @@
 
 #include "WiFi/ESP01.h"
 
-typedef enum{
+/*typedef enum{
 	IS_AUTO_CONNECT,
 	CREATE_SOFTAP,
 	WAITING_USER_DATA,
@@ -26,4 +26,4 @@ e_system ESP01_Init(){
 e_system ESP01_Task(){
 
 	return SYS_OK;
-}
+}*/
