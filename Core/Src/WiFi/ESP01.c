@@ -22,8 +22,14 @@ e_system ESP01_Init(){
 
 	return SYS_OK;
 }
+*/
+/*void ESP01_Task(){
+	switch(mode){
+	case verificar si existe una red:
+	break
+	case crear una red
+	break
+	case conectarse a una red
 
-e_system ESP01_Task(){
-
-	return SYS_OK;
+	}
 }*/

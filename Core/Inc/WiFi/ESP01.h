@@ -42,4 +42,6 @@ e_system ESP01_Init();
 
 e_system ESP01_Task();
 */
+
+void ESP01_Task();
 #endif /* INC_WIFI_ESP01_H_ */
