@@ -225,7 +225,7 @@ void Motor_Left_SetPWM(uint16_t dCycle);
  *
  * @param dir: Indica la forma en la que hay que setear los pines
  */
-void Motor_Left_SetPins(e_direction dir);
+void Motor_Left_SetPins(uint8_t pinA, uint8_t pinB);
 
 /**
  * @brief abstracción de hardware para setear el valor de PMW del motor derecho
@@ -239,7 +239,7 @@ void Motor_Right_SetPWM(uint16_t dCycle);
  *
  * @param dir: Indica la forma en la que hay que setear los pines
  */
-void Motor_Right_SetPins(e_direction dir);
+void Motor_Right_SetPins(uint8_t pinA, uint8_t pinB);
 
 /**
  * @brief abstracción de hardware de la función HAL_I2C_Mem_Write_DMA()
@@ -1183,8 +1183,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){ //			1/4000s
 
 void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c){
 	if(hi2c->Devaddress == SSD1306_I2C_ADDR){
-		Display_I2C_DMA_Ready(TRUE);
-
+		if(!MPU6050.isInit){
+			Display_I2C_DMA_Ready(TRUE);
+		}
 	}
 }
 
@@ -1193,17 +1194,6 @@ void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c){
 		MPU6050_I2C_DMA_Cplt(&MPU6050);
 		Display_I2C_DMA_Ready(TRUE);
 	}
-
-
-	if(hi2c->Devaddress == SSD1306_I2C_ADDR){
-		if(!MPU6050.isInit){
-			Display_I2C_DMA_Ready(TRUE);
-		}
-	}
-
-
-
-
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
@@ -1267,6 +1257,16 @@ void dataRxOn_USB(uint8_t *buff, uint32_t len){
 	}
 }
 
+void Motor_Left_SetPins(uint8_t pinA, uint8_t pinB){
+	HAL_GPIO_WritePin(M1_IN1_GPIO_Port, M1_IN1_Pin, pinA);
+	HAL_GPIO_WritePin(M1_IN2_GPIO_Port, M1_IN2_Pin, pinB);
+}
+
+void Motor_Right_SetPins(uint8_t pinA, uint8_t pinB){
+	HAL_GPIO_WritePin(M2_IN1_GPIO_Port, M2_IN1_Pin, pinA);
+	HAL_GPIO_WritePin(M2_IN2_GPIO_Port, M2_IN2_Pin, pinB);
+}
+/*
 void Motor_Left_SetPins(e_direction direction){
 	switch(direction){
 	case NO_INIT:
@@ -1312,7 +1312,7 @@ void Motor_Right_SetPins(e_direction direction){
 		break;
 	}
 }
-
+*/
 void Motor_Left_SetPWM(uint16_t dCycle){
 	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, dCycle);
 }

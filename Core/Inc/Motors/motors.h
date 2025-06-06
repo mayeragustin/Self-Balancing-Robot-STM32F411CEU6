@@ -47,7 +47,7 @@ typedef struct Motor_Data{
 	uint32_t 	maxValue;			/**< Valor máximo de velocidad permitida */
 	int32_t 	vel;				/**< Velocidad actual del motor */
 	uint16_t 	brakeTimeout;		/**< Tiempo de espera para el frenado */
-	void 		(*setPins)(e_direction dir);	/**< Puntero a función para establecer la dirección del motor */
+	void 		(*setPins)(uint8_t a, uint8_t b);	/**< Puntero a función para establecer la dirección del motor */
 	void 		(*setPWM)(uint16_t dCycle);	/**< Puntero a función para establecer el ciclo de trabajo del PWM */
 }s_motor;
 
@@ -62,7 +62,8 @@ typedef struct Motor_Data{
  * @param PIN_set Puntero a la función para establecer la dirección del motor.
  * @param max_value Valor máximo de velocidad permitida para el motor.
  */
-void Motor_Init(s_motor *motor, void (*PWM_set)(uint16_t dCycle), void (*PIN_set)(e_direction dir), uint16_t max_value);
+void Motor_Init(s_motor *motor, void (*PWM_set)(uint16_t dCycle),
+		void (*PIN_set)(uint8_t A, uint8_t B), uint16_t max_value);
 
 /**
  * @brief Ajusta la velocidad del motor utilizando un valor de 16 bits.
@@ -85,6 +86,8 @@ void Motor_Set_16_Speed(s_motor *motor, int32_t speed);
  * @param speed Velocidad deseada para el motor, en porcentaje de -100 a 100.
  */
 void Motor_Set_PER_Speed(s_motor *motor, int8_t speed);
+
+void Motor_Set_Direction(s_motor *motor, e_direction direction);
 
 /**
  * @brief Establece el tiempo de frenado del motor en milisegundos.

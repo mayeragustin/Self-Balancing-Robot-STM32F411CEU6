@@ -8,7 +8,7 @@
 #include <stddef.h>
 
 void Motor_Init(s_motor *motor, void (*PWM_set)(uint16_t dCycle),
-		void (*PIN_set)(e_direction dir), uint16_t max_value){
+		void (*PIN_set)(uint8_t A, uint8_t B), uint16_t max_value){
 
 	motor->direction = NO_INIT;
 	motor->setPins = PIN_set;
@@ -19,7 +19,7 @@ void Motor_Init(s_motor *motor, void (*PWM_set)(uint16_t dCycle),
 }
 
 void Motor_Set_16_Speed(s_motor *motor, int32_t speed){ //ARREGLAME FLACO PORFIS :)
-	if(motor->setPins == NULL || motor->setPWM == NULL)
+	if(motor->setPWM == NULL)
 		return;
 	if(speed > motor->maxValue)
 		speed = motor->maxValue;
@@ -32,21 +32,21 @@ void Motor_Set_16_Speed(s_motor *motor, int32_t speed){ //ARREGLAME FLACO PORFIS
 
 	if(speed > 0){
 		motor->direction = FORWARD;
-		motor->setPins(FORWARD);
+		Motor_Set_Direction(motor, FORWARD);
 		motor->setPWM((uint16_t)motor->vel);
 	}else if(speed < 0){
 		motor->direction = FORWARD;
-		motor->setPins(BACKWARD);
+		Motor_Set_Direction(motor, BACKWARD);
 		motor->setPWM((uint16_t)(motor->vel * -1));
 	}else{
 		motor->direction = FREE_WHEEL;
-		motor->setPins(FREE_WHEEL);
+		Motor_Set_Direction(motor, FREE_WHEEL);
 		motor->setPWM(0);
 	}
 }
 
 void Motor_Set_PER_Speed(s_motor *motor, int8_t speed){
-	if(motor->setPins == NULL || motor->setPWM == NULL)
+	if( motor->setPWM == NULL)
 		return;
 	if(speed > 100)
 		speed = 100;
@@ -59,16 +59,37 @@ void Motor_Set_PER_Speed(s_motor *motor, int8_t speed){
 
 	if(speed > 0){
 		motor->direction = FORWARD;
-		motor->setPins(FORWARD);
+		Motor_Set_Direction(motor, FORWARD);
 		motor->setPWM((uint16_t)motor->vel-1);
 	}else if(speed < 0){
 		motor->direction = BACKWARD;
-		motor->setPins(BACKWARD);
+		Motor_Set_Direction(motor, BACKWARD);
 		motor->setPWM((uint16_t)(motor->vel * -1)-1);
 	}else{
 		motor->direction = FREE_WHEEL;
-		motor->setPins(FREE_WHEEL);
+		Motor_Set_Direction(motor, FREE_WHEEL);
 		motor->setPWM(0);
+	}
+}
+
+void Motor_Set_Direction(s_motor *motor, e_direction direction){
+	if(motor->setPins == NULL)
+		return;
+	switch(direction){
+		case NO_INIT:
+			break;
+		case FREE_WHEEL:
+			motor->setPins(0, 0);
+			break;
+		case FORWARD:
+			motor->setPins(1, 0);
+			break;
+		case BACKWARD:
+			motor->setPins(0, 1);
+			break;
+		case BRAKE:
+			motor->setPins(1, 1);
+			break;
 	}
 }
 
@@ -81,7 +102,7 @@ void Motor_Set_Break_10ms(s_motor *motor, uint8_t timeout){
 		motor->brakeTimeout = timeout;
 
 	motor->direction = BRAKE;
-	motor->setPins(BRAKE);
+	Motor_Set_Direction(motor, BRAKE);
 
 }
 
