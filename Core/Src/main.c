@@ -419,12 +419,12 @@ void decodeOn_USB(s_commData *data){
 		break;
 	case SETMOTOR:
 		if(RXBUF[RXCMD + 1] == MOTOR_L){
-			Motor_Set_PER_Speed(&MotorL, RXBUF[RXCMD + 2]);
+			Motor_Set_Speed(&MotorL, RXBUF[RXCMD + 2]);
 			USB.data.auxBuffer[0] = ACK;
 			comm_sendCMD(&USB.data, SETMOTOR, &USB.data.auxBuffer[0], 1);
 		}
 		if(RXBUF[RXCMD + 1] == MOTOR_R){
-			Motor_Set_PER_Speed(&MotorR, RXBUF[RXCMD + 2]);
+			Motor_Set_Speed(&MotorR, RXBUF[RXCMD + 2]);
 			USB.data.auxBuffer[0] = ACK;
 			comm_sendCMD(&USB.data, SETMOTOR, &USB.data.auxBuffer[0], 1);
 		}else{
@@ -1266,53 +1266,7 @@ void Motor_Right_SetPins(uint8_t pinA, uint8_t pinB){
 	HAL_GPIO_WritePin(M2_IN1_GPIO_Port, M2_IN1_Pin, pinA);
 	HAL_GPIO_WritePin(M2_IN2_GPIO_Port, M2_IN2_Pin, pinB);
 }
-/*
-void Motor_Left_SetPins(e_direction direction){
-	switch(direction){
-	case NO_INIT:
-		break;
-	case FREE_WHEEL:
-		HAL_GPIO_WritePin(M1_IN1_GPIO_Port, M1_IN1_Pin, 0);
-		HAL_GPIO_WritePin(M1_IN2_GPIO_Port, M1_IN2_Pin, 0);
-		break;
-	case FORWARD:
-		HAL_GPIO_WritePin(M1_IN1_GPIO_Port, M1_IN1_Pin, 1);
-		HAL_GPIO_WritePin(M1_IN2_GPIO_Port, M1_IN2_Pin, 0);
-		break;
-	case BACKWARD:
-		HAL_GPIO_WritePin(M1_IN1_GPIO_Port, M1_IN1_Pin, 0);
-		HAL_GPIO_WritePin(M1_IN2_GPIO_Port, M1_IN2_Pin, 1);
-		break;
-	case BRAKE:
-		HAL_GPIO_WritePin(M1_IN1_GPIO_Port, M1_IN1_Pin, 1);
-		HAL_GPIO_WritePin(M1_IN2_GPIO_Port, M1_IN2_Pin, 1);
-		break;
-	}
-}
 
-void Motor_Right_SetPins(e_direction direction){
-	switch(direction){
-	case NO_INIT:
-		break;
-	case FREE_WHEEL:
-		HAL_GPIO_WritePin(M2_IN1_GPIO_Port, M2_IN1_Pin, 0);
-		HAL_GPIO_WritePin(M2_IN2_GPIO_Port, M2_IN2_Pin, 0);
-		break;
-	case FORWARD:
-		HAL_GPIO_WritePin(M2_IN1_GPIO_Port, M2_IN1_Pin, 1);
-		HAL_GPIO_WritePin(M2_IN2_GPIO_Port, M2_IN2_Pin, 0);
-		break;
-	case BACKWARD:
-		HAL_GPIO_WritePin(M2_IN1_GPIO_Port, M2_IN1_Pin, 0);
-		HAL_GPIO_WritePin(M2_IN2_GPIO_Port, M1_IN2_Pin, 1);
-		break;
-	case BRAKE:
-		HAL_GPIO_WritePin(M2_IN1_GPIO_Port, M2_IN1_Pin, 1);
-		HAL_GPIO_WritePin(M2_IN2_GPIO_Port, M2_IN2_Pin, 1);
-		break;
-	}
-}
-*/
 void Motor_Left_SetPWM(uint16_t dCycle){
 	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, dCycle);
 }

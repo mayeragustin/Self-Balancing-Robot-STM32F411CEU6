@@ -18,34 +18,7 @@ void Motor_Init(s_motor *motor, void (*PWM_set)(uint16_t dCycle),
 	motor->brakeTimeout = 0;
 }
 
-void Motor_Set_16_Speed(s_motor *motor, int32_t speed){ //ARREGLAME FLACO PORFIS :)
-	if(motor->setPWM == NULL)
-		return;
-	if(speed > motor->maxValue)
-		speed = motor->maxValue;
-	if(speed < -motor->maxValue)
-		speed = -motor->maxValue;
-	if(speed == motor->vel)
-		return;
-
-	motor->vel = speed;
-
-	if(speed > 0){
-		motor->direction = FORWARD;
-		Motor_Set_Direction(motor, FORWARD);
-		motor->setPWM((uint16_t)motor->vel);
-	}else if(speed < 0){
-		motor->direction = FORWARD;
-		Motor_Set_Direction(motor, BACKWARD);
-		motor->setPWM((uint16_t)(motor->vel * -1));
-	}else{
-		motor->direction = FREE_WHEEL;
-		Motor_Set_Direction(motor, FREE_WHEEL);
-		motor->setPWM(0);
-	}
-}
-
-void Motor_Set_PER_Speed(s_motor *motor, int8_t speed){
+void Motor_Set_Speed(s_motor *motor, int8_t speed){
 	if( motor->setPWM == NULL)
 		return;
 	if(speed > 100)

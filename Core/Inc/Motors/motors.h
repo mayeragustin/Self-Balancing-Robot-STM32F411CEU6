@@ -65,18 +65,7 @@ typedef struct Motor_Data{
 void Motor_Init(s_motor *motor, void (*PWM_set)(uint16_t dCycle),
 		void (*PIN_set)(uint8_t A, uint8_t B), uint16_t max_value);
 
-/**
- * @brief Ajusta la velocidad del motor utilizando un valor de 16 bits.
- *
- * Esta función establece la velocidad del motor en un rango de valores
- * entre -maxValue y maxValue, donde los valores negativos indican retroceso.
- *
- * @param motor Puntero a la estructura del motor.
- * @param speed Velocidad deseada para el motor, en el rango de -maxValue a maxValue.
- */
-void Motor_Set_16_Speed(s_motor *motor, int32_t speed);
-
-/**
+/*
  * @brief Ajusta la velocidad del motor utilizando un valor porcentual.
  *
  * Esta función ajusta la velocidad del motor en función de un valor
@@ -85,7 +74,7 @@ void Motor_Set_16_Speed(s_motor *motor, int32_t speed);
  * @param motor Puntero a la estructura del motor.
  * @param speed Velocidad deseada para el motor, en porcentaje de -100 a 100.
  */
-void Motor_Set_PER_Speed(s_motor *motor, int8_t speed);
+void Motor_Set_Speed(s_motor *motor, int8_t speed);
 
 void Motor_Set_Direction(s_motor *motor, e_direction direction);
 

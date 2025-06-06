@@ -30,6 +30,6 @@
 ../Core/Src/main.c:1252:6:dataRxOn_USB	3
 ../Core/Src/main.c:1260:6:Motor_Left_SetPins	1
 ../Core/Src/main.c:1265:6:Motor_Right_SetPins	1
-../Core/Src/main.c:1316:6:Motor_Left_SetPWM	1
-../Core/Src/main.c:1320:6:Motor_Right_SetPWM	1
-../Core/Src/main.c:1330:6:Error_Handler	1
+../Core/Src/main.c:1270:6:Motor_Left_SetPWM	1
+../Core/Src/main.c:1274:6:Motor_Right_SetPWM	1
+../Core/Src/main.c:1284:6:Error_Handler	1
