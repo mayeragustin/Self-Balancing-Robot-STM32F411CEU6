@@ -82,11 +82,6 @@ TIM_HandleTypeDef htim3;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-
-//uint8_t DMA_BUFFER[1048];
-
-uint32_t pepe;
-
 u_flag generalFlags;
 
 uint8_t is100ms1 = 10, is1s = 10, is5ms = 20;
@@ -312,6 +307,7 @@ void BateryLevel_Set();
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 void OLED_Print_Data_Task(){
+	uint8_t auxPos = 0;
 	if(Display.isInit){
 		switch(Display.state){
 		case INIT:
@@ -330,9 +326,9 @@ void OLED_Print_Data_Task(){
 			for(uint8_t i = 0; i < 8; i++){
 				for(uint8_t j = 0; j < 45; j++){
 					if(Analog.value[i] <= ADC_to_Index[j]){
-						pepe = 2 + i * 3;
-						Display_DrawLine(pepe, 61,  pepe, Index_to_Bar[j], SSD1306_COLOR_WHITE);
-						Display_DrawLine(pepe+1, 61,  pepe+1, Index_to_Bar[j], SSD1306_COLOR_WHITE);
+						auxPos = 2 + i * 3;
+						Display_DrawLine(auxPos, 61,  auxPos, Index_to_Bar[j], SSD1306_COLOR_WHITE);
+						Display_DrawLine(auxPos+1, 61,  auxPos+1, Index_to_Bar[j], SSD1306_COLOR_WHITE);
 						break;
 					}
 				}
@@ -484,63 +480,31 @@ void onKeyChangeState(e_Estados value){
 }
 
 void task_10ms(){
-
-	Debouncer_Task();
-
-
-	Encoder_Task(&EncoderL);
-	Encoder_Task(&EncoderR);
-
-
-	Motor_Break_Timeout(&MotorL);
-	Motor_Break_Timeout(&MotorR);
-	Encoder_Task(&EncoderL);
-	Encoder_Task(&EncoderR);
-
 	IS10MS = FALSE;
-
 
 	is100ms1--;
 	if(!is100ms1){
 		is100ms1 = 10;
-
 		HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-
 		is1s--;
 		if(!is1s){
 			is1s = 10;
 			Encoder_1s_Elapsed(&EncoderL);
 			Encoder_1s_Elapsed(&EncoderR);
-
-
-
-			is30s--;
-			if(!is30s){
-				is30s = 30;
-				//BateryLevel_Task();
-			}
 		}
 	}
 
-
-
 	Display.refreshCounter--;
-	if(!Display.refreshCounter){
+	if(!Display.refreshCounter){ //Tasa de refresco variable
 		Display.refreshCounter = Display.refreshRate;
 		OLED_Print_Data_Task();
 	}
-
-	Motor_Break_Timeout(&MotorL);
-	Motor_Break_Timeout(&MotorR);
 
 	Debouncer_Task();
 	Motor_Break_Timeout(&MotorL);
 	Motor_Break_Timeout(&MotorR);
 	Encoder_Task(&EncoderL);
 	Encoder_Task(&EncoderR);
-	IS10MS = FALSE;
-
-
 }
 /* USER CODE END 0 */
 
@@ -615,7 +579,7 @@ int main(void)
   /* FIN INICIALIZACIÓN DE MPU6050 */
 
   /* INICIALIZACIÓN DISPLAY*/
-  if(HAL_I2C_IsDeviceReady(&hi2c1, SSD1306_I2C_ADDR, 1, 10000) != HAL_OK){
+  /*if(HAL_I2C_IsDeviceReady(&hi2c1, SSD1306_I2C_ADDR, 1, 10000) != HAL_OK){
 	  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"I2C READY", 9);
   }else{
 	  Display_Set_I2C_Master_Transmit(&I2C_1_Abstract_Mem_DMA_Transmit, &I2C_1_Abstract_Master_Transmit_Blocking);
@@ -626,7 +590,7 @@ int main(void)
 		  Display.isInit = TRUE;
 		  Display.timer = HAL_GetTick();
 	  }
-  }
+  }*/
   /* FIN INICIALIZACIÓN DISPLAY */
 
 
@@ -1188,6 +1152,7 @@ void Init_Display(){
 		}else{
 			Display_DrawBitmap(0,0, uner_logo, 128, 64, 1);
 			Display.isInit = TRUE;
+			Display.timer = HAL_GetTick();
 		}
 	}
 }

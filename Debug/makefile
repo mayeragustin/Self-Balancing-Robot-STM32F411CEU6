@@ -74,8 +74,8 @@ all: main-build
 main-build: BlackPill.elf secondary-outputs
 
 # Tool invocations
-BlackPill.elf BlackPill.map: $(OBJS) $(USER_OBJS) C:\Users\agust\OneDrive\Documentos\Facultad\2025\Microcontroladores\st\BlackPill\STM32F411CEUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "BlackPill.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\agust\OneDrive\Documentos\Facultad\2025\Microcontroladores\st\BlackPill\STM32F411CEUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="BlackPill.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+BlackPill.elf BlackPill.map: $(OBJS) $(USER_OBJS) C:\Users\agust\OneDrive\Documentos\Facultad\2025\Microcontroladores\stm32\Self-Balancing-Robot-STM32F411CEU6\STM32F411CEUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "BlackPill.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\agust\OneDrive\Documentos\Facultad\2025\Microcontroladores\stm32\Self-Balancing-Robot-STM32F411CEU6\STM32F411CEUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="BlackPill.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
