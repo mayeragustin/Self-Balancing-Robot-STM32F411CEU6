@@ -403,7 +403,7 @@ void decodeOn_USB(s_commData *data){
 			data->auxBuffer[2] = decom.ui8[1];
 			comm_sendCMD(data, ADCSINGLE, &data->auxBuffer[0], 3);
 		}else{
-			comm_sendCMD(data, SYSERROR, (uint8_t*)"NO ADC", 6);
+			comm_sendCMD(data, SYSWARNING, (uint8_t*)"NO ADC", 6);
 		}
 		break;
 	case ADCBLOCK:
@@ -428,7 +428,7 @@ void decodeOn_USB(s_commData *data){
 			USB.data.auxBuffer[0] = ACK;
 			comm_sendCMD(&USB.data, SETMOTOR, &USB.data.auxBuffer[0], 1);
 		}else{
-			comm_sendCMD(data, SYSERROR, (uint8_t*)"NO MOTOR", 8);
+			comm_sendCMD(data, SYSWARNING, (uint8_t*)"NO MOTOR", 8);
 		}
 		break;
 	case GET_ENCODER:
@@ -445,7 +445,7 @@ void decodeOn_USB(s_commData *data){
 			data->auxBuffer[2] = decom.ui8[1];
 			comm_sendCMD(data, GET_ENCODER, &data->auxBuffer[0], 3);
 		}else{
-			comm_sendCMD(data, SYSERROR, (uint8_t*)"NO ENCODER", 10);
+			comm_sendCMD(data, SYSWARNING, (uint8_t*)"NO ENCODER", 10);
 		}
 		break;
 	case MPUBLOCK:
@@ -470,7 +470,7 @@ void decodeOn_USB(s_commData *data){
 		comm_sendCMD(data, MPUBLOCK, data->auxBuffer, 12);
 		break;
 	default:
-		comm_sendCMD(data, SYSERROR, (uint8_t*)"NO CMD", 6);
+		comm_sendCMD(data, SYSWARNING, (uint8_t*)"NO CMD", 6);
 		break;
 	}
 }
@@ -561,40 +561,13 @@ int main(void)
 
   Init_Timing();
 
-
-  Init_MPU6050();
-
   /* INICIALIZACIÓN DE MPU6050 */
-  /*if(HAL_I2C_IsDeviceReady(&hi2c1, MPU6050_ADDR, 1, 10000) != HAL_OK){
-	  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"MPU6050 READY", 13);
-  }else{
-	  MPU6050_Set_I2C_Communication(&I2C_1_Abstract_Mem_Write_Blocking, &I2C_1_Abstract_Mem_Read_Blocking);
-	  if(MPU6050_Init(&MPU6050) != SYS_OK){
-		  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"MPU6050 INIT", 12);
-	  }else{
-		  MPU6050_Calibrate(&MPU6050);
-		  MPU6050.isInit = TRUE;
-	  }
-  }*/
+  Init_MPU6050();
   /* FIN INICIALIZACIÓN DE MPU6050 */
 
   /* INICIALIZACIÓN DISPLAY*/
-  /*if(HAL_I2C_IsDeviceReady(&hi2c1, SSD1306_I2C_ADDR, 1, 10000) != HAL_OK){
-	  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"I2C READY", 9);
-  }else{
-	  Display_Set_I2C_Master_Transmit(&I2C_1_Abstract_Mem_DMA_Transmit, &I2C_1_Abstract_Master_Transmit_Blocking);
-	  if(Display_Init() != SYS_OK){
-		  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"OLED INIT", 9);
-	  }else{
-		  Display_DrawBitmap(0,0, uner_logo, 128, 64, 1);
-		  Display.isInit = TRUE;
-		  Display.timer = HAL_GetTick();
-	  }
-  }*/
-  /* FIN INICIALIZACIÓN DISPLAY */
-
-
   Init_Display();
+  /* FIN INICIALIZACIÓN DISPLAY */
 
   /* INICIALIZACIÓN DE MOTORES Y ENCODERS */
   Motor_Init(&MotorL, &Motor_Left_SetPWM , &Motor_Left_SetPins , htim3.Instance->ARR);
@@ -1174,10 +1147,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){ //			1/4000s
 	}
 	if(htim->Instance == TIM3){
 		IS10MS = TRUE;
-
-
-
-
 	}
 }
 

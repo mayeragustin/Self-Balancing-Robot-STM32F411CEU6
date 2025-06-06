@@ -38,6 +38,7 @@ typedef enum{
 
 	DEBUGER=			0xDE,		/**< Mensaje para depuración */
 	SYSERROR= 			0xEE,		/**< Error de sistema */
+	SYSWARNING=			0xEF,		/**< Aviso de sistema */
 
     GETALIVE=			0xF0,		/**< Solicitud de verificación de conexión (keep-alive) */
     FIRMWARE=			0xF1,		/**< Solicitud de versión de firmware */
