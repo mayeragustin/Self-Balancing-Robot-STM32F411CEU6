@@ -6,7 +6,6 @@
 "./Core/Src/Motors/encoder.o"
 "./Core/Src/Motors/motors.o"
 "./Core/Src/Protocol_Handler/protocol_handler.o"
-"./Core/Src/WiFi/AT_Commands.o"
 "./Core/Src/WiFi/ESP01.o"
 "./Core/Src/main.o"
 "./Core/Src/stm32f4xx_hal_msp.o"

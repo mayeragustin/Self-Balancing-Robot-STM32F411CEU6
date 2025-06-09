@@ -5,15 +5,12 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../Core/Src/WiFi/AT_Commands.c \
 ../Core/Src/WiFi/ESP01.c 
 
 OBJS += \
-./Core/Src/WiFi/AT_Commands.o \
 ./Core/Src/WiFi/ESP01.o 
 
 C_DEPS += \
-./Core/Src/WiFi/AT_Commands.d \
 ./Core/Src/WiFi/ESP01.d 
 
 
@@ -24,7 +21,7 @@ Core/Src/WiFi/%.o Core/Src/WiFi/%.su Core/Src/WiFi/%.cyclo: ../Core/Src/WiFi/%.c
 clean: clean-Core-2f-Src-2f-WiFi
 
 clean-Core-2f-Src-2f-WiFi:
-	-$(RM) ./Core/Src/WiFi/AT_Commands.cyclo ./Core/Src/WiFi/AT_Commands.d ./Core/Src/WiFi/AT_Commands.o ./Core/Src/WiFi/AT_Commands.su ./Core/Src/WiFi/ESP01.cyclo ./Core/Src/WiFi/ESP01.d ./Core/Src/WiFi/ESP01.o ./Core/Src/WiFi/ESP01.su
+	-$(RM) ./Core/Src/WiFi/ESP01.cyclo ./Core/Src/WiFi/ESP01.d ./Core/Src/WiFi/ESP01.o ./Core/Src/WiFi/ESP01.su
 
 .PHONY: clean-Core-2f-Src-2f-WiFi
 

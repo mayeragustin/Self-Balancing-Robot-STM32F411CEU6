@@ -144,7 +144,7 @@ e_system Display_UpdateScreen_Task() {
 			Update.PageData[2] = 0x10;                   // Upper Column
 			if(I2C_Master_Transmit(SSD1306_I2C_ADDR, 0x00, Update.PageData, 3)		== SYS_OK){
 				Update.state = DATA;
-				Update.Ready_DMA = FALSE;
+				//Update.Ready_DMA = FALSE;     //< LO DESACTIVO PARA QUE PAGE Y DATA SE HAGA DE UNA SOLA PASADA
 			}else{
 				return SYS_ERROR;
 			}

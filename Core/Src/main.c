@@ -104,8 +104,8 @@ struct{
 	uint8_t state;
 	uint32_t timer;
 	uint8_t auxString[10];
-	uint8_t refreshRate;
-	uint8_t refreshCounter;
+	uint8_t refreshRate_10ms;
+	uint8_t refreshCounter_10ms;
 }Display;
 
 struct{
@@ -116,8 +116,12 @@ struct{
 struct USB_DATA{
 	s_commData data;
 	uint8_t bytesToTx;
-	uint8_t bytesToRx;
 }USB;
+
+struct ESP_DATA{
+	s_commData data;
+	uint8_t bytesToTx;
+}ESP;
 
 struct CAR_DATA{
 	e_Car_state state;
@@ -140,14 +144,6 @@ void Init_Timing();
 void Init_MPU6050();
 void Init_Display();
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-	if(huart->Instance == USART1){
-		//dataTx = dataRx;
-		HAL_UART_Receive_IT(&huart1, &dataRx, 1);
-		dataRx = 0;
-	}
-}
-
 /* HAL FUNCTIONS */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
 
@@ -157,7 +153,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc);
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
+//void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
 /* END HAL FUNCTIONS */
 
 /**
@@ -314,7 +310,6 @@ void OLED_Print_Data_Task(){
 			if(HAL_GetTick() - Display.timer > 2000){
 				Display_Fill(SSD1306_COLOR_BLACK);
 				Display_DrawBitmap(0, 0, status_screen, 128, 64, SSD1306_COLOR_WHITE);
-				//Display_DrawBitmap(0,0, uner_logo, 128, 64, 1);
 				Display.state = INPUTS;
 			}
 			break;
@@ -333,7 +328,6 @@ void OLED_Print_Data_Task(){
 					}
 				}
 			}
-
 
 			if(MPU6050.isInit){
 				MPU6050.Acc.x = (MPU6050.Acc.x >> 14) * 9.8f;
@@ -494,9 +488,9 @@ void task_10ms(){
 		}
 	}
 
-	Display.refreshCounter--;
-	if(!Display.refreshCounter){ //Tasa de refresco variable
-		Display.refreshCounter = Display.refreshRate;
+	Display.refreshCounter_10ms--;
+	if(!Display.refreshCounter_10ms){ //Tasa de refresco variable
+		Display.refreshCounter_10ms = Display.refreshRate_10ms;
 		OLED_Print_Data_Task();
 	}
 
@@ -528,6 +522,7 @@ int main(void)
   MPU6050.isInit = FALSE;
   Display.isInit = FALSE;
   Display.state = INIT;
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -551,7 +546,7 @@ int main(void)
   Comm_Init(&USB.data, &decodeOn_USB, &writeOn_USB);
   CDC_Attach_Rx(&dataRxOn_USB);
 
-  HAL_UART_Receive_IT(&huart1, &dataRx, 1);
+  //HAL_UART_Receive_IT(&huart1, &dataRx, 1);
   /* FIN INICIALIZACIÓN DE PROTOCOLO MEDIANTE USB */
 
   /* INICIALIZACIÓN DE USER KEY Y DEBOUNCE */
@@ -577,10 +572,13 @@ int main(void)
   Encoder_Init(&EncoderR, ENCODER_FASTPPS_COUNTER_10MS);
   /* FIN INICIALIZACIÓN DE MOTORES Y ENCODERS */
 
+  /*if(ESP01_Init() != SYS_OK){
+	  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"ESP INIT", 8);
+  }else{
+
+  }*/
+
   Car.state = IDLE;
-
-
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -593,6 +591,8 @@ int main(void)
 	  /* USER TASK */
 	Comm_Task(&USB.data);
 	Display_UpdateScreen_Task();
+	MPU6050_MAF(&MPU6050);
+	//ESP01_Task();
 	  /* END USER TASK */
 
 	if(IS10MS){
@@ -1113,8 +1113,8 @@ void Init_MPU6050(){
 /* FIN INICIALIZACIÓN DE MPU6050 */
 /* INICIALIZACIÓN DISPLAY*/
 void Init_Display(){
-	Display.refreshCounter = DISPLAY_TYPICAL_REFRESH_RATE_10MS;
-	Display.refreshRate = DISPLAY_TYPICAL_REFRESH_RATE_10MS;
+	Display.refreshCounter_10ms = DISPLAY_TYPICAL_REFRESH_RATE_10MS;
+	Display.refreshRate_10ms = DISPLAY_TYPICAL_REFRESH_RATE_10MS;
 
 	if(HAL_I2C_IsDeviceReady(&hi2c1, SSD1306_I2C_ADDR, 1, 10000) != HAL_OK){
 		comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"OLED READY", 10);
@@ -1140,7 +1140,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){ //			1/4000s
 		if(!is5ms){
 			is5ms = 20;
 			if(MPU6050.isInit){
-				HAL_I2C_Mem_Read_DMA(&hi2c1, MPU6050_ADDR, ACCEL_XOUT_REG, 1, MPU6050.data, 14);
+				HAL_I2C_Mem_Read_DMA(&hi2c1, MPU6050_ADDR, ACCEL_XOUT_REG, 1, MPU6050.bit_data, 14);
 				Display_I2C_DMA_Ready(FALSE);
 			}
 		}
@@ -1177,15 +1177,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
     	Encoder_Add_Pulse(&EncoderR);
 	}
 }
-
+/**************************************** END HAL CALLBACKS ***************************************/
+/* esp, previa, eliminar*/
 /*void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	if(huart->Instance == USART1){
-		//dataTx = dataRx;
-		HAL_UART_Receive_IT(&huart1, &dataRx, 1);
-		dataRx = 0;
+		HAL_UART_Receive_IT(&huart1, &ESP.AT_buffer[ESP.At_iWrite++], 1);
 	}
 }*/
-/**************************************** END HAL CALLBACKS ***************************************/
+
 /*************************************** HARDWARE ABSTRACTION ************************************/
 e_system I2C_1_Abstract_Mem_DMA_Transmit(uint16_t Dev_Address, uint8_t reg, uint8_t *p_Data, uint16_t _Size){
 	return (e_system)HAL_I2C_Mem_Write_DMA(&hi2c1, Dev_Address, reg, 1, p_Data, _Size);

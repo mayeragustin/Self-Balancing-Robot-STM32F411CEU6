@@ -19,7 +19,7 @@ void Motor_Init(s_motor *motor, void (*PWM_set)(uint16_t dCycle),
 }
 
 void Motor_Set_Speed(s_motor *motor, int8_t speed){
-	if( motor->setPWM == NULL)
+	if(motor->setPWM == NULL)
 		return;
 	if(speed > 100)
 		speed = 100;

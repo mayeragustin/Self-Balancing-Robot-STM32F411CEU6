@@ -51,6 +51,18 @@ extern "C" {
 #define NUM_SAMPLES_BITS            12      ///< Bits de desplazamiento equivalente a 4096
 #define SCALE_FACTOR                16384   ///< Factor de escala para ±2g
 
+#ifndef NUM_MAF_BITS
+#define NUM_MAF_BITS				3
+#endif
+
+#ifndef NUM_MAF
+#define NUM_MAF						8
+#endif
+
+#ifndef NUM_AXIS
+#define NUM_AXIS					6
+#endif
+
 /**
  * @struct s_Axis
  * @brief Representa un eje de aceleración o giro con compensaciones y valores crudos.
@@ -65,12 +77,6 @@ typedef struct {
         int16_t y; ///< Offset en Y
         int16_t z; ///< Offset en Z
     } offset;
-
-    struct {
-        int32_t x; ///< Valor crudo acumulado en X
-        int32_t y; ///< Valor crudo acumulado en Y
-        int32_t z; ///< Valor crudo acumulado en Z
-    } raw;
 } s_Axis;
 
 /**
@@ -80,15 +86,20 @@ typedef struct {
 typedef struct {
     s_Axis Acc;    ///< Datos del acelerómetro
     s_Axis Gyro;   ///< Datos del giróscopo
-
-    struct {
+    struct{
         int16_t pitch; ///< Ángulo de pitch (inclinación)
         int16_t roll;  ///< Ángulo de roll (balanceo)
         int16_t yaw;   ///< Ángulo de yaw (giro)
-    } Angle;          ///< Ángulos calculados
-
-    uint8_t data[14]; ///< Buffer de datos crudos leídos por DMA
-    uint8_t dataReady;///< Flag de nuevos datos disponibles
+    }Angle;          ///< Ángulos calculados
+    struct{
+    	int32_t sumData[NUM_AXIS];
+    	int16_t mediaBuffer[NUM_MAF][NUM_AXIS];
+    	int16_t rawData[NUM_AXIS];
+    	int16_t filtredData[NUM_AXIS];
+    	uint8_t index;
+    	uint8_t isOn;
+    }MAF;
+    uint8_t bit_data[14]; ///< Buffer de datos crudos leídos por DMA
     uint8_t isInit;   ///< Flag de inicialización
 } s_MPU;
 
@@ -135,12 +146,7 @@ void MPU6050_Calibrate(s_MPU *mpu);
  */
 void MPU6050_I2C_DMA_Cplt(s_MPU *mpu);
 
-/**
- * @brief (Prototipo reservado) Lectura de datos mediante I2C estándar.
- *
- * @param mpu Puntero a la estructura del sensor.
- */
-void MPU6050_I2C_Read(s_MPU *mpu);
+void MPU6050_MAF(s_MPU *mpu);
 
 #ifdef __cplusplus
 }

@@ -52,7 +52,8 @@ typedef enum{
 	ADCBLOCK=			0xA1,		/**< Lectura de un bloque de valores ADC */
 	SETMOTOR=			0xA2,		/**< Comando para control de motor */
 	GET_ENCODER=		0xA3,		/**< Solicitud de lectura de encoder */
-	MPUBLOCK=			0xA4
+	MPUBLOCK=			0xA4,
+	MPUOFFSET=			0xA5
 }_eID;
 
 /**
