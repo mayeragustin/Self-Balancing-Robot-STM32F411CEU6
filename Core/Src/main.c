@@ -86,7 +86,7 @@ UART_HandleTypeDef huart1;
 /* USER CODE BEGIN PV */
 u_flag generalFlags;
 
-uint8_t is100ms1 = 10, is1s = 10, is5ms = 20, is20s = 20;
+uint8_t is100ms1 = 10, is1s = 10, is5ms = 20, is20s = 10;
 
 uint16_t is30s = 300;
 
@@ -124,6 +124,7 @@ struct ESP_DATA{
 	_sESP01Handle Config;
 	char *ssid;
 	char *password;
+	char *IP;
 	s_commData data;
 	uint8_t bytesInRx;
 
@@ -497,12 +498,58 @@ void onKeyChangeState(e_Estados value){
 
 }
 
-void onESP01ChangeState(_eESP01STATUS esp01State){
+void onESP01ChangeState(_eESP01STATUS esp01State) {
+    switch (esp01State) {
+        case ESP01_NOT_INIT:
+            sprintf((char*)USB.data.auxBuffer, "ESP01: No inicializado");
+            break;
+        case ESP01_WIFI_DISCONNECTED:
+            sprintf((char*)USB.data.auxBuffer, "ESP01: WiFi desconectado");
+            break;
+        case ESP01_WIFI_NOT_SETED:
+            sprintf((char*)USB.data.auxBuffer, "ESP01: WiFi no configurado");
+            break;
+        case ESP01_WIFI_CONNECTING_WIFI:
+            sprintf((char*)USB.data.auxBuffer, "ESP01: Conectando a WiFi...");
+            break;
+        case ESP01_WIFI_CONNECTED:
+            sprintf((char*)USB.data.auxBuffer, "ESP01: WiFi conectado");
+            break;
+        case ESP01_WIFI_NEW_IP:
+            sprintf((char*)USB.data.auxBuffer, "ESP01: Nueva IP asignada");
+            break;
+        case ESP01_UDPTCP_DISCONNECTED:
+            sprintf((char*)USB.data.auxBuffer, "ESP01: UDP/TCP desconectado");
+            break;
+        case ESP01_UDPTCP_CONNECTING:
+            sprintf((char*)USB.data.auxBuffer, "ESP01: Conectando UDP/TCP...");
+            break;
+        case ESP01_UDPTCP_CONNECTED:
+            sprintf((char*)USB.data.auxBuffer, "ESP01: UDP/TCP conectado");
+            break;
+        case ESP01_SEND_BUSY:
+            sprintf((char*)USB.data.auxBuffer, "ESP01: Enviando datos...");
+            break;
+        case ESP01_SEND_READY:
+            sprintf((char*)USB.data.auxBuffer, "ESP01: Listo para enviar");
+            break;
+        case ESP01_SEND_OK:
+            sprintf((char*)USB.data.auxBuffer, "ESP01: Envío OK");
+            break;
+        case ESP01_SEND_ERROR:
+            sprintf((char*)USB.data.auxBuffer, "ESP01: Error al enviar");
+            break;
+        default:
+            sprintf((char*)USB.data.auxBuffer, "ESP01: Estado desconocido");
+            break;
+    }
 
+    // Cast explícito también aplicado aquí
+    comm_sendCMD(&USB.data, USERTEXT, USB.data.auxBuffer, strlen((char*)USB.data.auxBuffer));
 }
 
-void onESP01Debug(const char *dbgStr){
-
+void onESP01Debug(const char *dbgStr) {
+    comm_sendCMD(&USB.data, USERTEXT, (uint8_t *)dbgStr, strlen(dbgStr));
 }
 
 void setESP01_CHPD(uint8_t val){
@@ -524,9 +571,12 @@ void task_10ms(){
 
 			is20s--;
 			if(!is20s){
-				is20s = 20;
-				if(ESP01_StateWIFI() != ESP01_WIFI_CONNECTED){
-					switch(ESP01_StartUDP("192.168.1.8", 30010, 30000) != ESP01_UDPTCP_CONNECTING){
+				is20s = 10;
+				if(ESP01_StateWIFI() != ESP01_WIFI_DISCONNECTED){
+
+				}else{
+					_eESP01STATUS nigger = ESP01_StartUDP((const char*) "192.168.1.8", 30010, 30000);
+					switch(nigger){
 					case ESP01_NOT_INIT:
 						comm_sendCMD(&USB.data, USERTEXT, (uint8_t *)"WIFI NOT INIT", 13);
 						break;
@@ -542,13 +592,13 @@ void task_10ms(){
 							comm_sendCMD(&USB.data, USERTEXT, USB.data.auxBuffer, len);
 						}
 						break;
+					default:
+						comm_sendCMD(&USB.data, USERTEXT, (uint8_t *)"vat", 3);
+						break;
 					}
-				}else{
-					comm_sendCMD(&USB.data, USERTEXT, (uint8_t *)"WIFI CONNECTED", 14);
 				}
 			}
 		}
-
 	}
 
 	Display.refreshCounter_10ms--;
@@ -589,6 +639,7 @@ int main(void)
 
   ESP.password = "wlan412877";
   ESP.ssid = "InternetPlus_bed788";
+  ESP.IP = "192.168.1.8";
   ESP.iR = 0;
   ESP.iW = 0;
 
@@ -628,8 +679,6 @@ int main(void)
   key = Debounce_Add(&KEY_Read_Value, &onKeyChangeState);
   /* FIN INICIALIZACIÓN DE USER KEY Y DEBOUNCE */
 
-  Init_Timing();
-
   /* INICIALIZACIÓN DE MPU6050 */
   Init_MPU6050();
   /* FIN INICIALIZACIÓN DE MPU6050 */
@@ -646,23 +695,22 @@ int main(void)
   Encoder_Init(&EncoderR, ENCODER_FASTPPS_COUNTER_10MS);
   /* FIN INICIALIZACIÓN DE MOTORES Y ENCODERS */
 
-
   ESP01_Init(&ESP.Config);
   ESP01_SetWIFI(ESP.ssid, ESP.password);
   ESP01_AttachChangeState(&onESP01ChangeState);
   ESP01_AttachDebugStr(&onESP01Debug);
 
-	if(ESP01_StartUDP("192.168.1.8", 30010, 30000) != ESP01_UDPTCP_CONNECTING){
-		comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"ESP UDP", 7);
-	}else{
-		comm_sendCMD(&USB.data, USERTEXT, (uint8_t*)"UDP ON", 6);
-	}
+  if(ESP01_StartUDP((const char*) "192.168.1.8", 30010, 30000) != ESP01_UDPTCP_CONNECTING){
+	  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"ESP UDP", 7);
+  }else{
+	  comm_sendCMD(&USB.data, USERTEXT, (uint8_t*)"UDP ON", 6);
+  }
 
   HAL_UART_Receive_IT(&huart1, &ESP.bytesInRx, 1);
 
-
-
   Car.state = IDLE;
+
+  Init_Timing();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -677,18 +725,6 @@ int main(void)
 	Display_UpdateScreen_Task();
 	MPU6050_MAF(&MPU6050);
 	ESP01_Task();
-
-
-	if(ESP.iR != ESP.iW){
-		if(ESP.iR > ESP.iW){
-			ESP.bytesToTx = 256 - ESP.iW;
-		}else{
-			ESP.bytesToTx = ESP.iR - ESP.iW;
-		}
-		CDC_Transmit_FS(ESP.buffer, ESP.bytesToTx);
-		ESP.iR += ESP.bytesToTx;
-	}
-	  /* END USER TASK */
 
 	if(IS10MS){
 		task_10ms();

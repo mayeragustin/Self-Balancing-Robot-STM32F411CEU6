@@ -97,7 +97,7 @@ void MPU6050_Calibrate(s_MPU *mpu){
 	}
     mpu->Acc.offset.x = (int16_t)(temp_raw[0] >> NUM_SAMPLES_BITS);
     mpu->Acc.offset.y = (int16_t)(temp_raw[1] >> NUM_SAMPLES_BITS);
-    mpu->Acc.offset.z = (int16_t)(temp_raw[2] >> NUM_SAMPLES_BITS)/* - SCALE_FACTOR*/;
+    mpu->Acc.offset.z = (int16_t)(temp_raw[2] >> NUM_SAMPLES_BITS) - SCALE_FACTOR;
 
     mpu->Gyro.offset.x = (int16_t)(temp_raw[3] >> NUM_SAMPLES_BITS);
 	mpu->Gyro.offset.y = (int16_t)(temp_raw[4] >> NUM_SAMPLES_BITS);
@@ -122,11 +122,11 @@ void MPU6050_I2C_DMA_Cplt(s_MPU *mpu){
 void MPU6050_MAF(s_MPU *mpu){ //Moving Average Filter
 	if(mpu->MAF.isOn){
 		mpu->MAF.isOn = FALSE;
-		for(uint8_t channel = 0; channel < NUM_AXIS; channel++){
-			mpu->MAF.sumData[channel] -= mpu->MAF.mediaBuffer[mpu->MAF.index][channel];
-			mpu->MAF.sumData[channel] += mpu->MAF.rawData[channel];
-			mpu->MAF.mediaBuffer[mpu->MAF.index][channel] = mpu->MAF.rawData[channel];
-			mpu->MAF.filtredData[channel] = (mpu->MAF.sumData[channel] >> NUM_MAF_BITS);
+		for(uint8_t axis = 0; axis < NUM_AXIS; axis++){
+			mpu->MAF.sumData[axis] -= mpu->MAF.mediaBuffer[mpu->MAF.index][axis];
+			mpu->MAF.sumData[axis] += mpu->MAF.rawData[axis];
+			mpu->MAF.mediaBuffer[mpu->MAF.index][axis] = mpu->MAF.rawData[axis];
+			mpu->MAF.filtredData[axis] = (mpu->MAF.sumData[axis] >> NUM_MAF_BITS);
 		}
 		mpu->MAF.index++;
 		mpu->MAF.index &= (NUM_MAF - 1);
