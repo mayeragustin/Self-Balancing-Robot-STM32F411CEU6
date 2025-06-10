@@ -49,7 +49,7 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Core/Inc/ADC/ADC_handler.h ../Core/Inc/Debouncer/debouncer.h \
  ../Core/Inc/Motors/motors.h ../Core/Inc/Motors/encoder.h \
  ../Core/Inc/I2C/OLED/display.h ../Core/Inc/I2C/OLED/fonts.h \
- ../Core/Inc/I2C/MPU6050/mpu6050.h
+ ../Core/Inc/I2C/MPU6050/mpu6050.h ../Core/Inc/WiFi/ESP01.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -106,3 +106,4 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Inc/I2C/OLED/display.h:
 ../Core/Inc/I2C/OLED/fonts.h:
 ../Core/Inc/I2C/MPU6050/mpu6050.h:
+../Core/Inc/WiFi/ESP01.h:

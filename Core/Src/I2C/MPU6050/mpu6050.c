@@ -77,7 +77,6 @@ e_system MPU6050_Init(s_MPU *mpu){
 			return SYS_ERROR;
 		}
 
-
 	}else{
 		return SYS_ERROR;
 	}

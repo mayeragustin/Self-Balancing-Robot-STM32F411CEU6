@@ -15,6 +15,6 @@
 ../Core/Src/WiFi/ESP01.c:339:5:ESP01_IsHDRRST	4	static
 ../Core/Src/WiFi/ESP01.c:349:13:ESP01ATDecode	16	static
 ../Core/Src/WiFi/ESP01.c:586:13:ESP01DOConnection	8	static
-../Core/Src/WiFi/ESP01.c:748:13:ESP01SENDData	16	static
-../Core/Src/WiFi/ESP01.c:781:13:ESP01StrToBufTX	24	static
-../Core/Src/WiFi/ESP01.c:789:13:ESP01ByteToBufTX	16	static
+../Core/Src/WiFi/ESP01.c:747:13:ESP01SENDData	16	static
+../Core/Src/WiFi/ESP01.c:780:13:ESP01StrToBufTX	24	static
+../Core/Src/WiFi/ESP01.c:788:13:ESP01ByteToBufTX	16	static
