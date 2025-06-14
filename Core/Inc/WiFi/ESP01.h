@@ -49,7 +49,7 @@ typedef enum{
 /**< Inicializa el driver ESP01 UDP */
 typedef struct{
 	void (*DoCHPD)(uint8_t value);			    /**< Puntero a una función que permite manejar el pin CH_PD del ESP01 */
-	int (*WriteUSARTByte)(uint8_t value);		/**< Puntero a una función que escribe un byte en ¿la USART?, devuelve 1 si pudo escribir */
+	int (*WriteUSARTByte)(uint8_t value);		/**< Puntero a una función que escribe un byte en la USART, devuelve 1 si pudo escribir */
 	void (*WriteByteToBufRX)(uint8_t value);	/**< Puntero a una función que escribe un byte en buffer de recepción */
 //	uint8_t 			*bufRX;				    /**< Puntero al buffer donde se guardarán los datos recibidos */
 //	uint16_t			*iwRX;				    /**< Puntero al índice de escritura del buffer de recepción circular */

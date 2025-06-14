@@ -46,7 +46,7 @@
 
    ----------------------------------------------------------------------
 */
-
+#include "stdint.h"
 #include "I2C/OLED/fonts.h"
 
 const uint8_t uner_logo[] = {

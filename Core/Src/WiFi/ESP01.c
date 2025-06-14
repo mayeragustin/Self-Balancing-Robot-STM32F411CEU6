@@ -56,7 +56,7 @@ static void (*ESP01DbgStr)(const char *dbgStr);
 
 static char esp01SSID[64] = {0};
 static char esp01PASSWORD[32] = {0};
-static char esp01RemoteIP[16] = {0};
+static char esp01RemoteIP[15] = {0};
 static char esp01PROTO[4] = "UDP";
 static char esp01RemotePORT[6] = {0};
 static char esp01LocalIP[16] = {0};
@@ -254,11 +254,9 @@ _eESP01STATUS ESP01_Send(uint8_t *buf, uint16_t irRingBuf, uint16_t length, uint
 		l = strlen(strInt);
 		if(l>4 || l==0)
 			return ESP01_SEND_ERROR;
-
 		ESP01StrToBufTX(ATCIPSEND);
 		ESP01StrToBufTX(strInt);
 		ESP01StrToBufTX("\r>");
-
 		for(uint16_t i=0; i<length; i++){
 			esp01TXATBuf[esp01iwTX++] = buf[irRingBuf++];
 			if(esp01iwTX == ESP01TXBUFAT)
@@ -266,23 +264,17 @@ _eESP01STATUS ESP01_Send(uint8_t *buf, uint16_t irRingBuf, uint16_t length, uint
 			if(irRingBuf == sizeRingBuf)
 				irRingBuf = 0;
 		}
-
 		esp01Flags.bit.TXCIPSEND = 1;
 		esp01Flags.bit.SENDINGDATA = 1;
-
 		if(ESP01DbgStr != NULL){
 			ESP01DbgStr("+&DBGSENDING DATA ");
 			ESP01DbgStr(strInt);
 			ESP01DbgStr("\n");
 		}
-
-
 		return ESP01_SEND_READY;
 	}
-
 	if(ESP01DbgStr != NULL)
 		ESP01DbgStr("+&DBGSENDING DATA BUSY\n");
-
 	return ESP01_SEND_BUSY;
 }
 
@@ -318,7 +310,6 @@ void ESP01_Timeout10ms(){
 }
 
 void ESP01_Task(){
-
 	if(esp01irRXAT != esp01iwRXAT)
 		ESP01ATDecode();
 
@@ -342,21 +333,15 @@ int ESP01_IsHDRRST(){
 	return 0;
 }
 
-
-
-
 /* Private Functions */
 static void ESP01ATDecode(){
 	uint16_t i;
 	uint8_t value;
-
 	if(esp01ATSate==ESP01ATHARDRST0 || esp01ATSate==ESP01ATHARDRST1 ||
 	   esp01ATSate==ESP01ATHARDRSTSTOP){
 		esp01irRXAT = esp01iwRXAT;
 		return;
 	}
-
-
 	i = esp01iwRXAT;
 	esp01TimeoutDataRx = 2;
 	while(esp01irRXAT != i){
@@ -366,11 +351,11 @@ static void ESP01ATDecode(){
             indexResponse = 0;
             indexResponseChar = 4;
             while(responses[indexResponse] != NULL){
-                if(value == responses[indexResponse][indexResponseChar]){
-                    esp01nBytes = (responses[indexResponse][0] - '0');
+                if(value == responses[indexResponse][indexResponseChar]){ // todos los ocmandos de respuesta tienen una cabecer
+                    esp01nBytes = (responses[indexResponse][0] - '0');			// aca saca los primeros dos numero que guarda la cantidad de bytes de la cabecera hace el *10 pq pone el primer byte en las decenas  y al otro lo suma así nomas
                     esp01nBytes *= 10;
                     esp01nBytes += (responses[indexResponse][1] - '0');
-                    esp01nBytes--;
+                    esp01nBytes--;			//y esta bosta es pq
                     break;
                 }
                 indexResponse++;
@@ -476,6 +461,8 @@ static void ESP01ATDecode(){
 					esp01TimeoutTask = 0;
 					esp01Flags.bit.ATRESPONSEOK = 1;
 					esp01Flags.bit.UDPTCPCONNECTED = 1;
+					if(ESP01DbgStr != NULL)
+							ESP01DbgStr("+&UDPTCPCONNECTED=1\n");
 					if(ESP01ChangeState != NULL)
 						ESP01ChangeState(ESP01_UDPTCP_CONNECTED);
 					break;
@@ -580,7 +567,6 @@ static void ESP01ATDecode(){
 		if(esp01irRXAT == ESP01RXBUFAT)
 			esp01irRXAT = 0;
 	}
-
 }
 
 static void ESP01DOConnection(){
@@ -662,7 +648,7 @@ static void ESP01DOConnection(){
 			ESP01DbgStr("+&DBGESP01ATCWJAP\n");
 		esp01Flags.bit.ATRESPONSEOK = 0;
 		esp01ATSate = ESP01CWJAPRESPONSE;
-		esp01TimeoutTask = 1500;
+		esp01TimeoutTask = 5000;
 		break;
 	case ESP01CWJAPRESPONSE:
 		if(esp01Flags.bit.ATRESPONSEOK){
@@ -722,7 +708,7 @@ static void ESP01DOConnection(){
 		esp01Flags.bit.ATRESPONSEOK = 0;
 		esp01Flags.bit.UDPTCPCONNECTED = 0;
 		esp01ATSate = ESP01CIPSTARTRESPONSE;
-		esp01TimeoutTask = 200;
+		esp01TimeoutTask = 5000;
 		break;
 	case ESP01CIPSTARTRESPONSE:
 		if(esp01Flags.bit.ATRESPONSEOK)

@@ -126,12 +126,8 @@ struct ESP_DATA{
 	char *password;
 	char *IP;
 	s_commData data;
-	uint8_t bytesInRx;
-
-	uint8_t buffer[256];
-    uint8_t iR;
-    uint8_t iW;
-    uint8_t bytesToTx;
+	uint8_t AT_Rx_data;
+	uint8_t bytesToTx;
 }ESP;
 
 struct CAR_DATA{
@@ -309,8 +305,6 @@ void OLED_Print_Data_Task();
 
 void BateryLevel_Set();
 
-
-
 int ESP01_UART_Transmit(uint8_t val);
 
 void ESP01_Data_Recived(uint8_t value);
@@ -320,6 +314,8 @@ void onESP01ChangeState(_eESP01STATUS esp01State);
 void onESP01Debug(const char *dbgStr);
 
 void setESP01_CHPD(uint8_t val);
+
+void writeOn_ESP(s_commData *data);
 /************************************ FIN FUNCIONES PARA ABSTRACCIÓN DE HARDWARE ************************************/
 /* USER CODE END PFP */
 
@@ -431,7 +427,7 @@ void decodeOn_USB(s_commData *data){
 			data->auxBuffer[i*2] = decom.ui8[0];
 			data->auxBuffer[i*2+1] = decom.ui8[1];
 		}
-		comm_sendCMD(data, ADCBLOCK, &data->auxBuffer[0], 17);
+		comm_sendCMD(data, ADCBLOCK, data->auxBuffer, 17);
 		break;
 	case DEBUGER:
 
@@ -440,12 +436,12 @@ void decodeOn_USB(s_commData *data){
 		if(RXBUF[RXCMD + 1] == MOTOR_L){
 			Motor_Set_Speed(&MotorL, RXBUF[RXCMD + 2]);
 			USB.data.auxBuffer[0] = ACK;
-			comm_sendCMD(&USB.data, SETMOTOR, &USB.data.auxBuffer[0], 1);
+			comm_sendCMD(data, SETMOTOR, data->auxBuffer, 1);
 		}
 		if(RXBUF[RXCMD + 1] == MOTOR_R){
 			Motor_Set_Speed(&MotorR, RXBUF[RXCMD + 2]);
 			USB.data.auxBuffer[0] = ACK;
-			comm_sendCMD(&USB.data, SETMOTOR, &USB.data.auxBuffer[0], 1);
+			comm_sendCMD(data, SETMOTOR, data->auxBuffer, 1);
 		}else{
 			comm_sendCMD(data, SYSWARNING, (uint8_t*)"NO MOTOR", 8);
 		}
@@ -499,7 +495,7 @@ void onKeyChangeState(e_Estados value){
 }
 
 void onESP01ChangeState(_eESP01STATUS esp01State) {
-    switch (esp01State) {
+   switch (esp01State) {
         case ESP01_NOT_INIT:
             sprintf((char*)USB.data.auxBuffer, "ESP01: No inicializado");
             break;
@@ -572,31 +568,13 @@ void task_10ms(){
 			is20s--;
 			if(!is20s){
 				is20s = 10;
-				if(ESP01_StateWIFI() != ESP01_WIFI_DISCONNECTED){
+				/*if(ESP01_StateWIFI() == ESP01_WIFI_CONNECTED){
+					char* pepe = ESP01_GetLocalIP();
+					comm_sendCMD(&USB.data, USERTEXT, (uint8_t*)pepe, 17);
+				}*/
+				comm_sendCMD(&ESP.data, GETALIVE, NULL, 0);
+				//comm_sendCMD(&ESP.data, GETALIVE, NULL, 0);
 
-				}else{
-					_eESP01STATUS nigger = ESP01_StartUDP((const char*) "192.168.1.8", 30010, 30000);
-					switch(nigger){
-					case ESP01_NOT_INIT:
-						comm_sendCMD(&USB.data, USERTEXT, (uint8_t *)"WIFI NOT INIT", 13);
-						break;
-					case ESP01_WIFI_NOT_SETED:
-						comm_sendCMD(&USB.data, USERTEXT, (uint8_t *)"WIFI NOT SETED", 14);
-						break;
-					case ESP01_WIFI_DISCONNECTED:
-						comm_sendCMD(&USB.data, USERTEXT, (uint8_t *)"WIFI DISCONECT", 14);
-						break;
-					case ESP01_UDPTCP_CONNECTING:
-						if(ESP01_GetLocalIP() != NULL){
-							uint8_t len = sprintf((char*)&USB.data.auxBuffer[0], "IP: %s", ESP01_GetLocalIP());
-							comm_sendCMD(&USB.data, USERTEXT, USB.data.auxBuffer, len);
-						}
-						break;
-					default:
-						comm_sendCMD(&USB.data, USERTEXT, (uint8_t *)"vat", 3);
-						break;
-					}
-				}
 			}
 		}
 	}
@@ -608,6 +586,7 @@ void task_10ms(){
 	}
 
 	ESP01_Timeout10ms();
+
 	Debouncer_Task();
 	Motor_Break_Timeout(&MotorL);
 	Motor_Break_Timeout(&MotorR);
@@ -639,15 +618,7 @@ int main(void)
 
   ESP.password = "wlan412877";
   ESP.ssid = "InternetPlus_bed788";
-  ESP.IP = "192.168.1.8";
-  ESP.iR = 0;
-  ESP.iW = 0;
-
-
-
-  ESP.Config.DoCHPD = setESP01_CHPD;
-  ESP.Config.WriteByteToBufRX = ESP01_Data_Recived;
-  ESP.Config.WriteUSARTByte = ESP01_UART_Transmit;
+  ESP.IP = "192.168.1.10";
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -670,8 +641,6 @@ int main(void)
   /* INICIALIZACIÓN DE PROTOCOLO MEDIANTE USB */
   Comm_Init(&USB.data, &decodeOn_USB, &writeOn_USB);
   CDC_Attach_Rx(&dataRxOn_USB);
-
-  //HAL_UART_Receive_IT(&huart1, &dataRx, 1);
   /* FIN INICIALIZACIÓN DE PROTOCOLO MEDIANTE USB */
 
   /* INICIALIZACIÓN DE USER KEY Y DEBOUNCE */
@@ -695,19 +664,23 @@ int main(void)
   Encoder_Init(&EncoderR, ENCODER_FASTPPS_COUNTER_10MS);
   /* FIN INICIALIZACIÓN DE MOTORES Y ENCODERS */
 
+  /* ESP01 INITIALIZATION */
+  Comm_Init(&ESP.data, &decodeOn_USB, &writeOn_ESP);
+  ESP.data.isESP01 = TRUE;
+  HAL_UART_Receive_IT(&huart1, &ESP.AT_Rx_data, 1);
+
+  ESP.Config.DoCHPD = setESP01_CHPD;
+  ESP.Config.WriteUSARTByte = ESP01_UART_Transmit;
+  ESP.Config.WriteByteToBufRX = ESP01_Data_Recived;
+
   ESP01_Init(&ESP.Config);
-  ESP01_SetWIFI(ESP.ssid, ESP.password);
-  ESP01_AttachChangeState(&onESP01ChangeState);
-  ESP01_AttachDebugStr(&onESP01Debug);
-
-  if(ESP01_StartUDP((const char*) "192.168.1.8", 30010, 30000) != ESP01_UDPTCP_CONNECTING){
-	  comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"ESP UDP", 7);
-  }else{
-	  comm_sendCMD(&USB.data, USERTEXT, (uint8_t*)"UDP ON", 6);
+  if(ESP01_StateWIFI() == ESP01_WIFI_DISCONNECTED){
+	  ESP01_SetWIFI(ESP.ssid, ESP.password);
   }
-
-  HAL_UART_Receive_IT(&huart1, &ESP.bytesInRx, 1);
-
+  ESP01_StartUDP("192.168.1.10", 30010, 30000);
+  ESP01_AttachChangeState(&onESP01ChangeState);
+  //ESP01_AttachDebugStr(&onESP01Debug);
+  /* END ESP01 INITIALIZATION */
   Car.state = IDLE;
 
   Init_Timing();
@@ -722,6 +695,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	  /* USER TASK */
 	Comm_Task(&USB.data);
+	Comm_Task(&ESP.data);
 	Display_UpdateScreen_Task();
 	MPU6050_MAF(&MPU6050);
 	ESP01_Task();
@@ -1140,7 +1114,10 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, ESP_EN_Pin|M2_IN2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(ESP_EN_GPIO_Port, ESP_EN_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, LedStatus_2_Pin|M2_IN2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, M1_IN1_Pin|M1_IN2_Pin|M2_IN1_Pin, GPIO_PIN_RESET);
@@ -1158,8 +1135,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(KEY_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : ESP_EN_Pin M2_IN2_Pin */
-  GPIO_InitStruct.Pin = ESP_EN_Pin|M2_IN2_Pin;
+  /*Configure GPIO pins : ESP_EN_Pin LedStatus_2_Pin M2_IN2_Pin */
+  GPIO_InitStruct.Pin = ESP_EN_Pin|LedStatus_2_Pin|M2_IN2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -1238,8 +1215,8 @@ void Init_MPU6050(){
 /* FIN INICIALIZACIÓN DE MPU6050 */
 /* INICIALIZACIÓN DISPLAY*/
 void Init_Display(){
-	Display.refreshCounter_10ms = DISPLAY_LOW_REFRESH_RATE_10MS;
-	Display.refreshRate_10ms = DISPLAY_LOW_REFRESH_RATE_10MS;
+	Display.refreshCounter_10ms = DISPLAY_MEDIUM_REFRESH_RATE_10MS;
+	Display.refreshRate_10ms = DISPLAY_MEDIUM_REFRESH_RATE_10MS;
 
 	if(HAL_I2C_IsDeviceReady(&hi2c1, SSD1306_I2C_ADDR, 1, 10000) != HAL_OK){
 		comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"OLED READY", 10);
@@ -1256,11 +1233,10 @@ void Init_Display(){
 }
 /* FIN INICIALIZACIÓN DISPLAY */
 /************************************ END USER INIT FUNCTIONS ****************************************/
-/**************************************** HAL CALLBACKS ***************************************/
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){ //			1/4000s
+/***************************************** HAL CALLBACKS *********************************************/
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){ //								1/4000s
 	if(htim->Instance == TIM1){
-
-		HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&Analog.raw, 9);
+		HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&Analog.raw, ADC_NUM_SENSORS);
 		is5ms--;
 		if(!is5ms){
 			is5ms = 20;
@@ -1306,22 +1282,50 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	if(huart->Instance == USART1){
-		ESP01_WriteRX(ESP.bytesInRx);
-		HAL_UART_Receive_IT(&huart1, &ESP.bytesInRx, 1);
+		ESP01_WriteRX(ESP.AT_Rx_data);
+		HAL_UART_Receive_IT(&huart1, &ESP.AT_Rx_data, 1);
+
 	}
 }
 
 int ESP01_UART_Transmit(uint8_t val){
-	if(__HAL_UART_GET_FLAG(&huart1, USART_SR_TXE)){
-		if(HAL_UART_Transmit_IT(&huart1, &val, 1) == HAL_OK)
-			return 1;
+	if(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE)){
+		USART1->DR = val;
+		return 1;
 	}
 	return 0;
 }
 
 void ESP01_Data_Recived(uint8_t value){
-	ESP.buffer[ESP.iW++] = value;
+	ESP.data.Rx.buffer[ESP.data.Rx.write++] = value;
 }
+
+void writeOn_ESP(s_commData *data){
+	//comm_sendCMD(&USB.data, USERTEXT, (uint8_t *)"writeONESP", 10);
+	if(data->Tx.write > data->Tx.read){
+		ESP.bytesToTx = data->Tx.write - data->Tx.read;
+	}else{
+		ESP.bytesToTx = RINGBUFFLENGTH - data->Tx.read;
+	}
+	if(ESP01_Send(data->Tx.buffer,  data->Tx.read,  ESP.bytesToTx,  RINGBUFFLENGTH) == ESP01_SEND_READY){
+		data->Tx.read += ESP.bytesToTx;
+		//comm_sendCMD(&USB.data, USERTEXT, (uint8_t*)"dice mandar", 11);
+	}
+	/*switch(ESP01_Send(data->Tx.buffer,  data->Tx.read,  ESP.bytesToTx,  RINGBUFFLENGTH)){
+	case ESP01_NOT_INIT:
+		comm_sendCMD(&USB.data, USERTEXT, (uint8_t*)"noinit", 6);
+		break;
+	case ESP01_UDPTCP_DISCONNECTED:
+		comm_sendCMD(&USB.data, USERTEXT, (uint8_t*)"discon", 6);
+		break;
+	case ESP01_SEND_READY:
+		data->Tx.read += ESP.bytesToTx;
+		break;
+	case ESP01_SEND_BUSY:
+		break;
+	}*/
+}
+
 
 /*************************************** HARDWARE ABSTRACTION ************************************/
 e_system I2C_1_Abstract_Mem_DMA_Transmit(uint16_t Dev_Address, uint8_t reg, uint8_t *p_Data, uint16_t _Size){

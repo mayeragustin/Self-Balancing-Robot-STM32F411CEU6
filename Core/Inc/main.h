@@ -83,6 +83,8 @@ void Error_Handler(void);
 #define BAT_LVL_GPIO_Port GPIOB
 #define ESP_EN_Pin GPIO_PIN_2
 #define ESP_EN_GPIO_Port GPIOB
+#define LedStatus_2_Pin GPIO_PIN_10
+#define LedStatus_2_GPIO_Port GPIOB
 #define M1_ENC_A_Pin GPIO_PIN_12
 #define M1_ENC_A_GPIO_Port GPIOB
 #define M1_ENC_A_EXTI_IRQn EXTI15_10_IRQn

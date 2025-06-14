@@ -7,7 +7,7 @@
 
 #include "Protocol_Handler/protocol_handler.h"
 #include <string.h>
-//#include "Communication/ESP01.h"
+#include "WiFi/ESP01.h"
 
 static uint8_t i = 0;
 static uint8_t auxIndex = 0;
@@ -35,12 +35,8 @@ void Comm_Task(s_commData* comm){
 		decodeProtocol(comm);
 	}
 	if (comm->Tx.read != comm->Tx.write) {
-		if(!comm->isESP01){
-			if(comm->dataWriter != NULL)
-				comm->dataWriter(comm);
-		}else{
-			//ESP01_Send((unsigned char*)&comm->Tx.buffer,  comm->Tx.read,  1,  RINGBUFFLENGTH);
-		}
+		if(comm->dataWriter != NULL)
+			comm->dataWriter(comm);
 	}
 }
 
