@@ -1280,11 +1280,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 }
 /**************************************** END HAL CALLBACKS ***************************************/
 
+/******************************************** ESP ***********************************************/
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	if(huart->Instance == USART1){
 		ESP01_WriteRX(ESP.AT_Rx_data);
 		HAL_UART_Receive_IT(&huart1, &ESP.AT_Rx_data, 1);
-
 	}
 }
 
@@ -1301,31 +1301,12 @@ void ESP01_Data_Recived(uint8_t value){
 }
 
 void writeOn_ESP(s_commData *data){
-	//comm_sendCMD(&USB.data, USERTEXT, (uint8_t *)"writeONESP", 10);
-	if(data->Tx.write > data->Tx.read){
-		ESP.bytesToTx = data->Tx.write - data->Tx.read;
-	}else{
-		ESP.bytesToTx = RINGBUFFLENGTH - data->Tx.read;
-	}
+	ESP.bytesToTx = data->Tx.write - data->Tx.read;
 	if(ESP01_Send(data->Tx.buffer,  data->Tx.read,  ESP.bytesToTx,  RINGBUFFLENGTH) == ESP01_SEND_READY){
 		data->Tx.read += ESP.bytesToTx;
-		//comm_sendCMD(&USB.data, USERTEXT, (uint8_t*)"dice mandar", 11);
 	}
-	/*switch(ESP01_Send(data->Tx.buffer,  data->Tx.read,  ESP.bytesToTx,  RINGBUFFLENGTH)){
-	case ESP01_NOT_INIT:
-		comm_sendCMD(&USB.data, USERTEXT, (uint8_t*)"noinit", 6);
-		break;
-	case ESP01_UDPTCP_DISCONNECTED:
-		comm_sendCMD(&USB.data, USERTEXT, (uint8_t*)"discon", 6);
-		break;
-	case ESP01_SEND_READY:
-		data->Tx.read += ESP.bytesToTx;
-		break;
-	case ESP01_SEND_BUSY:
-		break;
-	}*/
 }
-
+/******************************************** END ESP ***********************************************/
 
 /*************************************** HARDWARE ABSTRACTION ************************************/
 e_system I2C_1_Abstract_Mem_DMA_Transmit(uint16_t Dev_Address, uint8_t reg, uint8_t *p_Data, uint16_t _Size){
