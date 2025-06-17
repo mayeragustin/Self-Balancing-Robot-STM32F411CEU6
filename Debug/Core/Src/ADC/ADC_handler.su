@@ -1,0 +1,2 @@
+../Core/Src/ADC/ADC_handler.c:19:6:ADC_Conversion_Cplt	24	static
+../Core/Src/ADC/ADC_handler.c:30:6:ADC_Linealization	4	static

@@ -1,0 +1,6 @@
+../Core/Src/Motors/motors.c:10:6:Motor_Init	1
+../Core/Src/Motors/motors.c:21:6:Motor_Set_Speed	7
+../Core/Src/Motors/motors.c:48:6:Motor_Set_Direction	6
+../Core/Src/Motors/motors.c:69:6:Motor_Set_Break_10ms	3
+../Core/Src/Motors/motors.c:82:6:Motor_Break_Timeout	3
+../Core/Src/Motors/motors.c:90:6:Motor_Set_MaxValue	1

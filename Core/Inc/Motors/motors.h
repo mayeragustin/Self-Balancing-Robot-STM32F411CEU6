@@ -16,11 +16,16 @@
 #include "stdint.h"
 #include "utilities.h"
 
+/* DATASHEET CONSTANTS*/
+#define STALL_T		22.2 // N * mm
+#define STALL_C 	421  // mA
+#define STALL_P		2.52 // W
+
 /** @brief Identificador para el motor izquierdo */
-#define MOTOR_L 0
+#define MOTOR_L 	0
 
 /** @brief Identificador para el motor derecho */
-#define MOTOR_R	1
+#define MOTOR_R		1
 
 /**
  * @brief Enumeración de las posibles direcciones del motor.

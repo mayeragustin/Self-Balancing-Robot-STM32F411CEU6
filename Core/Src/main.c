@@ -552,6 +552,11 @@ void task_10ms(){
 			Encoder_1s_Elapsed(&EncoderL);
 			Encoder_1s_Elapsed(&EncoderR);
 
+			/* ESTABILIZACIÓN DE PWM */
+			Motor_Set_MaxValue(&MotorR, (3026/Analog.value[9]));//<! Usamos esto para independizar la salida PWM de la carga de las baterias
+			Motor_Set_MaxValue(&MotorL, (3026/Analog.value[9]));
+			/* END ESTABILIZACIÓN DE PWM */
+
 			is20s--;
 			if(!is20s){
 				is20s = 10;

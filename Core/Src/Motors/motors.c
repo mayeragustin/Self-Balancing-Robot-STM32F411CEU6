@@ -13,7 +13,7 @@ void Motor_Init(s_motor *motor, void (*PWM_set)(uint16_t dCycle),
 	motor->direction = NO_INIT;
 	motor->setPins = PIN_set;
 	motor->setPWM = PWM_set;
-	motor->maxValue = max_value;
+	motor->maxValue = max_value / 100;
 	motor->vel = 0;
 	motor->brakeTimeout = 0;
 }
@@ -28,16 +28,16 @@ void Motor_Set_Speed(s_motor *motor, int8_t speed){
 	if(speed == motor->vel)
 		return;
 
-	motor->vel = speed * 600;
+	motor->vel = speed * motor->maxValue;
 
 	if(speed > 0){
 		motor->direction = FORWARD;
 		Motor_Set_Direction(motor, FORWARD);
-		motor->setPWM((uint16_t)motor->vel-1);
+		motor->setPWM((uint16_t)motor->vel);
 	}else if(speed < 0){
 		motor->direction = BACKWARD;
 		Motor_Set_Direction(motor, BACKWARD);
-		motor->setPWM((uint16_t)(motor->vel * -1)-1);
+		motor->setPWM((uint16_t)(motor->vel * -1));
 	}else{
 		motor->direction = FREE_WHEEL;
 		Motor_Set_Direction(motor, FREE_WHEEL);
@@ -88,5 +88,5 @@ void Motor_Break_Timeout(s_motor *motor){
 }
 
 void Motor_Set_MaxValue(s_motor *motor, uint32_t value){
-	motor->maxValue = value;
+	motor->maxValue = value / 100;
 }
