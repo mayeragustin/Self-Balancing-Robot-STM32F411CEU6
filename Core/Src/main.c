@@ -88,8 +88,6 @@ u_flag generalFlags;
 
 uint8_t is100ms1 = 10, is1s = 10, is5ms = 20, is20s = 10;
 
-uint16_t is30s = 300;
-
 u_conv decom;
 
 uint8_t key;
@@ -108,6 +106,9 @@ struct{
 	uint8_t auxString[10];
 	uint8_t refreshRate_10ms;
 	uint8_t refreshCounter_10ms;
+
+	uint8_t auxXPos;
+	uint8_t auxYPos;
 }Display;
 
 struct{
@@ -322,7 +323,6 @@ void writeOn_ESP(s_commData *data);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 void OLED_Print_Data_Task(){
-	uint8_t auxPos = 0;
 	if(Display.isInit){
 		switch(Display.state){
 		case INIT:
@@ -340,12 +340,12 @@ void OLED_Print_Data_Task(){
 
 			Display_DrawBitmap(2, 17, ADC_Blackout, 37, 44, SSD1306_COLOR_BLACK);
 			for(uint8_t i = 0; i < 8; i++){
-				auxYpos = 107 * Analog.value[i] + 170000;
-				auxYpos += 5000;
-				auxYpos /= 10000;
-				auxXPos = 2 + i * 3;
-				Display_DrawLine(auxPos, 61,  auxPos, Index_to_Bar[j], SSD1306_COLOR_WHITE);
-				Display_DrawLine(auxPos+1, 61,  auxPos+1, Index_to_Bar[j], SSD1306_COLOR_WHITE);
+				Display.auxYPos = 107 * Analog.value[i] + 170000;
+				Display.auxYPos += 5000;
+				Display.auxYPos /= 10000;
+				Display.auxXPos = 2 + i * 3;
+				Display_DrawLine(Display.auxXPos, 61,  Display.auxXPos, Display.auxYPos, SSD1306_COLOR_WHITE);
+				Display_DrawLine(Display.auxXPos+1, 61,  Display.auxXPos+1, Display.auxYPos, SSD1306_COLOR_WHITE);
 			}
 
 			if(MPU6050.isInit){
@@ -569,6 +569,7 @@ void task_10ms(){
 	ESP01_Timeout10ms();
 
 	Debouncer_Task();
+
 	Motor_Break_Timeout(&MotorL);
 	Motor_Break_Timeout(&MotorR);
 	Encoder_Task(&EncoderL);
@@ -662,6 +663,7 @@ int main(void)
 	Display_UpdateScreen_Task();
 	MPU6050_MAF(&MPU6050);
 	ESP01_Task();
+	/* END USER TASK */
 
 	if(IS10MS){
 		task_10ms();
@@ -678,7 +680,6 @@ int main(void)
 
 		break;
 	}
-
   }
   /* USER CODE END 3 */
 }

@@ -1,4 +1,0 @@
-../Core/Src/Protocol_Handler/protocol_handler.c:19:6:Comm_Init	1
-../Core/Src/Protocol_Handler/protocol_handler.c:33:6:Comm_Task	4
-../Core/Src/Protocol_Handler/protocol_handler.c:43:6:decodeProtocol	18
-../Core/Src/Protocol_Handler/protocol_handler.c:114:6:comm_sendCMD	6

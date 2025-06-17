@@ -1,5 +1,0 @@
-../Core/Src/I2C/MPU6050/mpu6050.c:15:6:MPU6050_Set_I2C_Communication	1
-../Core/Src/I2C/MPU6050/mpu6050.c:22:10:MPU6050_Init	3
-../Core/Src/I2C/MPU6050/mpu6050.c:86:6:MPU6050_Calibrate	2
-../Core/Src/I2C/MPU6050/mpu6050.c:110:6:MPU6050_I2C_DMA_Cplt	1
-../Core/Src/I2C/MPU6050/mpu6050.c:122:6:MPU6050_MAF	3

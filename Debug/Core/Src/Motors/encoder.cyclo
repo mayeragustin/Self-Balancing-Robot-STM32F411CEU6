@@ -1,4 +1,0 @@
-../Core/Src/Motors/encoder.c:10:6:Encoder_Init	1
-../Core/Src/Motors/encoder.c:17:6:Encoder_Task	3
-../Core/Src/Motors/encoder.c:32:6:Encoder_Add_Pulse	1
-../Core/Src/Motors/encoder.c:36:6:Encoder_1s_Elapsed	1
