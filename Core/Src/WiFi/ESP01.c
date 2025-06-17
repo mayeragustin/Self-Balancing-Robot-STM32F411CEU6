@@ -138,7 +138,8 @@ static uint8_t indexResponse = 0;
 static uint8_t indexResponseChar = 0;
 
 _emode mode;
-uint8_t userConnected = 0;
+uint8_t esp01userConnected = 0;
+static char esp01Link;
 
 static char ssid_buffer[MAX_SSID_LEN];
 static char pass_buffer[MAX_PASS_LEN];
@@ -572,6 +573,10 @@ static void ESP01ATDecode(){
 				else{
 					esp01nBytes *= 10;
 					esp01nBytes += (value - '0');
+
+					if(esp01ATSate == ESP01_WAITING_CONNECTION){
+						esp01Link = value;
+					}
 				}
 			}
 			break;
@@ -818,6 +823,7 @@ static void ESP01DOConnection(){
 			ESP01DbgStr("+&DBGESP01CWSAP");
 		esp01ATSate = ESP01ATCWDHCP;
 		esp01TimeoutTask = 300;
+		esp01userConnected = 0;
 		//esp01Flags.bit.ATRESPONSEOK = 0;
 		//esp01Flags.bit.ATRESPONSEOK=0;
 		//esp01TimeoutTask = 4000;
@@ -833,11 +839,12 @@ static void ESP01DOConnection(){
 		if(ESP01DbgStr != NULL)
 			ESP01DbgStr("+&DBGESP01CWDHCP");
 		esp01ATSate = ESP01_WAITING_CONNECTION;
+
 		esp01TimeoutTask = 3000;
 		break;
 	case ESP01_WAITING_CONNECTION:
-		if(userConnected){
-
+		if(esp01userConnected){
+			esp01ATSate = ESP01ATCIPSERVER;
 		}
 		break;
 	case ESP01ATCIPSERVER:
@@ -856,7 +863,8 @@ static void ESP01DOConnection(){
 	break;
 	case ESP01ATCONFIGSERVER:
 		ESP01StrToBufTX(ATCIPSEND);
-		ESP01StrToBufTX("0,177");
+		ESP01ByteToBufTX(esp01Link);
+		ESP01StrToBufTX(",177");
 		ESP01StrToBufTX("\r>");
 
 		esp01Flags.bit.TXCIPSEND = 1;
@@ -867,7 +875,7 @@ static void ESP01DOConnection(){
 
 		esp01ATSate = ESP01ATCONFIGSERVER_RESPONSE;
 		esp01Flags.bit.ATRESPONSEOK = 0;
-		esp01TimeoutTask = 200;
+		//esp01TimeoutTask = 200;
 	break;
 	case ESP01ATCONFIGSERVER_RESPONSE:
 		if(!esp01Flags.bit.WAITINGSYMBOL){
