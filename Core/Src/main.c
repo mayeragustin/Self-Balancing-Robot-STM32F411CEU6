@@ -150,7 +150,7 @@ static void MX_USART1_UART_Init(void);
 void Init_Timing();
 void Init_MPU6050();
 void Init_Display();
-
+void Init_WiFi();
 /* HAL FUNCTIONS */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
 
@@ -256,7 +256,7 @@ void Motor_Right_SetPins(uint8_t pinA, uint8_t pinB);
  * @param  Size Amount of data to be sent
  * @retval HAL status
  */
-e_system I2C_1_Abstract_Mem_DMA_Transmit(uint16_t Dev_Address, uint8_t reg, uint8_t *p_Data, uint16_t _Size);
+e_system I2C1_DMA_Mem_Write(uint16_t Dev_Address, uint8_t reg, uint8_t *p_Data, uint16_t _Size);
 
 /**
   * @brief abstracción de hardware de la función HAL_I2C_Master_Transmit()
@@ -269,7 +269,7 @@ e_system I2C_1_Abstract_Mem_DMA_Transmit(uint16_t Dev_Address, uint8_t reg, uint
   * @param  Timeout Timeout duration
   * @retval HAL status
   */
-e_system I2C_1_Abstract_Master_Transmit_Blocking(uint16_t Dev_Address, uint8_t *p_Data, uint16_t _Size, uint32_t _Timeout);
+e_system I2C1_Master_Transmit(uint16_t Dev_Address, uint8_t *p_Data, uint16_t _Size, uint32_t _Timeout);
 
 /**
   * @brief abstracción de hardware de la función HAL_I2C_Mem_Read()
@@ -284,7 +284,7 @@ e_system I2C_1_Abstract_Master_Transmit_Blocking(uint16_t Dev_Address, uint8_t *
   * @param  Timeout Timeout duration
   * @retval HAL status
   */
-e_system I2C_1_Abstract_Mem_Read_Blocking(uint16_t Dev_Address, uint8_t Mem_Adress, uint8_t Mem_AddSize, uint8_t *p_Data, uint16_t _Size, uint32_t _Timeout);
+e_system I2C1_Mem_Read(uint16_t Dev_Address, uint8_t Mem_Adress, uint8_t Mem_AddSize, uint8_t *p_Data, uint16_t _Size, uint32_t _Timeout);
 
 /**
   * @brief abstracción de hardware de la función HAL_I2C_Mem_Write()
@@ -299,7 +299,7 @@ e_system I2C_1_Abstract_Mem_Read_Blocking(uint16_t Dev_Address, uint8_t Mem_Adre
   * @param  Timeout Timeout duration
   * @retval HAL status
   */
-e_system I2C_1_Abstract_Mem_Write_Blocking(uint16_t Dev_Address, uint8_t Mem_Adress, uint8_t Mem_AddSize, uint8_t *p_Data, uint16_t _Size, uint32_t _Timeout);
+e_system I2C1_Mem_Write(uint16_t Dev_Address, uint8_t Mem_Adress, uint8_t Mem_AddSize, uint8_t *p_Data, uint16_t _Size, uint32_t _Timeout);
 
 void OLED_Print_Data_Task();
 
@@ -321,8 +321,6 @@ void writeOn_ESP(s_commData *data);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-
 void OLED_Print_Data_Task(){
 	uint8_t auxPos = 0;
 	if(Display.isInit){
@@ -338,22 +336,22 @@ void OLED_Print_Data_Task(){
 
 			break;
 		case INPUTS:
+			BateryLevel_Set();
+
 			Display_DrawBitmap(2, 17, ADC_Blackout, 37, 44, SSD1306_COLOR_BLACK);
 			for(uint8_t i = 0; i < 8; i++){
-				for(uint8_t j = 0; j < 45; j++){
-					if(Analog.value[i] <= ADC_to_Index[j]){
-						auxPos = 2 + i * 3;
-						Display_DrawLine(auxPos, 61,  auxPos, Index_to_Bar[j], SSD1306_COLOR_WHITE);
-						Display_DrawLine(auxPos+1, 61,  auxPos+1, Index_to_Bar[j], SSD1306_COLOR_WHITE);
-						break;
-					}
-				}
+				auxYpos = 107 * Analog.value[i] + 170000;
+				auxYpos += 5000;
+				auxYpos /= 10000;
+				auxXPos = 2 + i * 3;
+				Display_DrawLine(auxPos, 61,  auxPos, Index_to_Bar[j], SSD1306_COLOR_WHITE);
+				Display_DrawLine(auxPos+1, 61,  auxPos+1, Index_to_Bar[j], SSD1306_COLOR_WHITE);
 			}
 
 			if(MPU6050.isInit){
-				MPU6050.Acc.x = (MPU6050.Acc.x >> 14) * 9.8f;
-				MPU6050.Acc.y = (MPU6050.Acc.y >> 14) * 9.8f;
-				MPU6050.Acc.z = (MPU6050.Acc.z >> 14) * 9.8f;
+				MPU6050.Acc.x = (MPU6050.Acc.x / 16384.0) * 9.8f;
+				MPU6050.Acc.y = (MPU6050.Acc.y / 16384.0) * 9.8f;
+				MPU6050.Acc.z = (MPU6050.Acc.z / 16384.0) * 9.8f;
 				sprintf((char*)Display.auxString, "Ax:%d", MPU6050.Acc.x);
 				Display_SetCursor(25, 17);
 				Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
@@ -373,15 +371,8 @@ void OLED_Print_Data_Task(){
 				Display_SetCursor(73, 51);
 				Display_WriteString((char*)Display.auxString, Font_7x10, SSD1306_COLOR_WHITE);
 			}
-
 			break;
 		}
-	}
-
-	is30s--;
-	if(!is30s){
-		is30s = 300;
-		BateryLevel_Set();
 	}
 
 	Display_I2C_Refresh_Ready(TRUE);
@@ -548,10 +539,6 @@ void onESP01Debug(const char *dbgStr) {
     comm_sendCMD(&USB.data, USERTEXT, (uint8_t *)dbgStr, strlen(dbgStr));
 }
 
-void setESP01_CHPD(uint8_t val){
-	HAL_GPIO_WritePin(ESP_EN_GPIO_Port, ESP_EN_Pin, val);
-}
-
 void task_10ms(){
 	IS10MS = FALSE;
 
@@ -568,19 +555,13 @@ void task_10ms(){
 			is20s--;
 			if(!is20s){
 				is20s = 10;
-				/*if(ESP01_StateWIFI() == ESP01_WIFI_CONNECTED){
-					char* pepe = ESP01_GetLocalIP();
-					comm_sendCMD(&USB.data, USERTEXT, (uint8_t*)pepe, 17);
-				}*/
 				comm_sendCMD(&ESP.data, GETALIVE, NULL, 0);
-				//comm_sendCMD(&ESP.data, GETALIVE, NULL, 0);
-
 			}
 		}
 	}
 
 	Display.refreshCounter_10ms--;
-	if(!Display.refreshCounter_10ms){ //Tasa de refresco variable
+	if(!Display.refreshCounter_10ms){ 							//Tasa de refresco variable
 		Display.refreshCounter_10ms = Display.refreshRate_10ms;
 		OLED_Print_Data_Task();
 	}
@@ -615,10 +596,6 @@ int main(void)
   MPU6050.isInit = FALSE;
   Display.isInit = FALSE;
   Display.state = INIT;
-
-  ESP.password = "wlan412877";
-  ESP.ssid = "InternetPlus_bed788";
-  ESP.IP = "192.168.1.10";
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -665,21 +642,7 @@ int main(void)
   /* FIN INICIALIZACIÓN DE MOTORES Y ENCODERS */
 
   /* ESP01 INITIALIZATION */
-  Comm_Init(&ESP.data, &decodeOn_USB, &writeOn_ESP);
-  ESP.data.isESP01 = TRUE;
-  HAL_UART_Receive_IT(&huart1, &ESP.AT_Rx_data, 1);
-
-  ESP.Config.DoCHPD = setESP01_CHPD;
-  ESP.Config.WriteUSARTByte = ESP01_UART_Transmit;
-  ESP.Config.WriteByteToBufRX = ESP01_Data_Recived;
-
-  ESP01_Init(&ESP.Config);
-  if(ESP01_StateWIFI() == ESP01_WIFI_DISCONNECTED){
-	  ESP01_SetWIFI(ESP.ssid, ESP.password);
-  }
-  ESP01_StartUDP("192.168.1.10", 30010, 30000);
-  ESP01_AttachChangeState(&onESP01ChangeState);
-  //ESP01_AttachDebugStr(&onESP01Debug);
+  Init_WiFi();
   /* END ESP01 INITIALIZATION */
   Car.state = IDLE;
 
@@ -1204,7 +1167,7 @@ void Init_MPU6050(){
 	if(HAL_I2C_IsDeviceReady(&hi2c1, MPU6050_ADDR, 1, 10000) != HAL_OK){
 		comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"MPU6050 READY", 13);
 	}else{
-		MPU6050_Set_I2C_Communication(&I2C_1_Abstract_Mem_Write_Blocking, &I2C_1_Abstract_Mem_Read_Blocking);
+		MPU6050_Set_I2C_Communication(&I2C1_Mem_Write, &I2C1_Mem_Read);
 		if(MPU6050_Init(&MPU6050) != SYS_OK){
 			comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"MPU6050 INIT", 12);
 		}else{
@@ -1213,6 +1176,7 @@ void Init_MPU6050(){
 	}
 }
 /* FIN INICIALIZACIÓN DE MPU6050 */
+
 /* INICIALIZACIÓN DISPLAY*/
 void Init_Display(){
 	Display.refreshCounter_10ms = DISPLAY_MEDIUM_REFRESH_RATE_10MS;
@@ -1221,7 +1185,7 @@ void Init_Display(){
 	if(HAL_I2C_IsDeviceReady(&hi2c1, SSD1306_I2C_ADDR, 1, 10000) != HAL_OK){
 		comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"OLED READY", 10);
 	}else{
-		Display_Set_I2C_Master_Transmit(&I2C_1_Abstract_Mem_DMA_Transmit, &I2C_1_Abstract_Master_Transmit_Blocking);
+		Display_Set_I2C_Master_Transmit(&I2C1_DMA_Mem_Write, &I2C1_Master_Transmit);
 		if(Display_Init() != SYS_OK){
 			comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"OLED INIT", 9);
 		}else{
@@ -1232,6 +1196,29 @@ void Init_Display(){
 	}
 }
 /* FIN INICIALIZACIÓN DISPLAY */
+
+/* INICIALIZACIÓN WIFI */
+void Init_WiFi(){
+	ESP.password = 	"wlan412877";
+	ESP.ssid = 		"InternetPlus_bed788";
+	ESP.IP = 		"192.168.1.10";
+
+	Comm_Init(&ESP.data, &decodeOn_USB, &writeOn_ESP);
+	ESP.data.isESP01 = TRUE;
+	HAL_UART_Receive_IT(&huart1, &ESP.AT_Rx_data, 1);
+
+	ESP.Config.DoCHPD = setESP01_CHPD;
+	ESP.Config.WriteUSARTByte = ESP01_UART_Transmit;
+	ESP.Config.WriteByteToBufRX = ESP01_Data_Recived;
+
+	ESP01_Init(&ESP.Config);
+	ESP01_SetWIFI(ESP.ssid, ESP.password);
+	ESP01_StartUDP("192.168.1.10", 30010, 30000);
+	ESP01_AttachChangeState(&onESP01ChangeState);
+	//ESP01_AttachDebugStr(&onESP01Debug);
+}
+/* END INICIALIZACIÓN WIFI */
+
 /************************************ END USER INIT FUNCTIONS ****************************************/
 /***************************************** HAL CALLBACKS *********************************************/
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){ //								1/4000s
@@ -1309,20 +1296,24 @@ void writeOn_ESP(s_commData *data){
 /******************************************** END ESP ***********************************************/
 
 /*************************************** HARDWARE ABSTRACTION ************************************/
-e_system I2C_1_Abstract_Mem_DMA_Transmit(uint16_t Dev_Address, uint8_t reg, uint8_t *p_Data, uint16_t _Size){
+e_system I2C1_DMA_Mem_Write(uint16_t Dev_Address, uint8_t reg, uint8_t *p_Data, uint16_t _Size){
 	return (e_system)HAL_I2C_Mem_Write_DMA(&hi2c1, Dev_Address, reg, 1, p_Data, _Size);
 }
 
-e_system I2C_1_Abstract_Master_Transmit_Blocking(uint16_t Dev_Address, uint8_t *p_Data, uint16_t _Size, uint32_t _Timeout){
+e_system I2C1_Master_Transmit(uint16_t Dev_Address, uint8_t *p_Data, uint16_t _Size, uint32_t _Timeout){
 	return (e_system)HAL_I2C_Master_Transmit(&hi2c1, Dev_Address, p_Data, _Size, _Timeout);
 }
 
-e_system I2C_1_Abstract_Mem_Write_Blocking(uint16_t Dev_Address, uint8_t Mem_Adress, uint8_t Mem_AddSize, uint8_t *p_Data, uint16_t _Size, uint32_t _Timeout){
+e_system I2C1_Mem_Write(uint16_t Dev_Address, uint8_t Mem_Adress, uint8_t Mem_AddSize, uint8_t *p_Data, uint16_t _Size, uint32_t _Timeout){
 	return HAL_I2C_Mem_Write(&hi2c1, Dev_Address, Mem_Adress, Mem_AddSize, p_Data, _Size, _Timeout);
 }
 
-e_system I2C_1_Abstract_Mem_Read_Blocking(uint16_t Dev_Address, uint8_t Mem_Adress, uint8_t Mem_AddSize, uint8_t *p_Data, uint16_t _Size, uint32_t _Timeout){
+e_system I2C1_Mem_Read(uint16_t Dev_Address, uint8_t Mem_Adress, uint8_t Mem_AddSize, uint8_t *p_Data, uint16_t _Size, uint32_t _Timeout){
 	return HAL_I2C_Mem_Read(&hi2c1, Dev_Address, Mem_Adress, Mem_AddSize, p_Data, _Size, _Timeout);
+}
+
+void setESP01_CHPD(uint8_t val){
+	HAL_GPIO_WritePin(ESP_EN_GPIO_Port, ESP_EN_Pin, val);
 }
 
 uint8_t KEY_Read_Value(){

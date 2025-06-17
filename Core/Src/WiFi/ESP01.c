@@ -355,7 +355,7 @@ static void ESP01ATDecode(){
                     esp01nBytes = (responses[indexResponse][0] - '0');			// aca saca los primeros dos numero que guarda la cantidad de bytes de la cabecera hace el *10 pq pone el primer byte en las decenas  y al otro lo suma así nomas
                     esp01nBytes *= 10;
                     esp01nBytes += (responses[indexResponse][1] - '0');
-                    esp01nBytes--;			//y esta bosta es pq
+                    esp01nBytes--;
                     break;
                 }
                 indexResponse++;

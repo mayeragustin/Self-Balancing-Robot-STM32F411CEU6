@@ -34,10 +34,6 @@
  */
 #define ADC_DESPLAZAMIENTOS 	5
 
-extern const uint8_t Index_to_Bar[];
-extern const uint16_t ADC_to_Index[];
-extern const uint8_t ADC_Blackout[];
-
 /**
  * @brief Filtro de media móvil aplicado a las conversiones ADC.
  *

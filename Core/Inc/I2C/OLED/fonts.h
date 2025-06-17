@@ -108,6 +108,8 @@ extern const uint8_t uner_logo[];
 
 extern const uint8_t status_screen[];
 
+extern const uint8_t ADC_Blackout[];
+
 /**
  * @brief  7 x 10 pixels font size structure 
  */
