@@ -45,6 +45,9 @@ typedef enum{
 #define ESP01RXBUFAT		128
 #define ESP01TXBUFAT		256
 
+#define MAX_SSID_LEN		32
+#define MAX_PASS_LEN		32
+
 
 /**< Inicializa el driver ESP01 UDP */
 typedef struct{
@@ -56,6 +59,12 @@ typedef struct{
 //	uint16_t			sizeBufferRX;		  	/**< Tamaño en bytes del buffer de recepción*/
 } _sESP01Handle;
 
+typedef enum{
+	CONNECTWIFI,
+	CREATEWIFI,
+}_emode;
+
+void ESP01_setMode(_emode _mode);
 
 /**
  * @brief ESP01_WIFI Configura y Conecta

@@ -560,7 +560,8 @@ void task_10ms(){
 			is20s--;
 			if(!is20s){
 				is20s = 10;
-				comm_sendCMD(&ESP.data, GETALIVE, NULL, 0);
+
+				//comm_sendCMD(&ESP.data, GETALIVE, NULL, 0);
 			}
 		}
 	}
@@ -1220,8 +1221,10 @@ void Init_WiFi(){
 	ESP01_Init(&ESP.Config);
 	ESP01_SetWIFI(ESP.ssid, ESP.password);
 	ESP01_StartUDP("192.168.1.10", 30010, 30000);
-	ESP01_AttachChangeState(&onESP01ChangeState);
-	//ESP01_AttachDebugStr(&onESP01Debug);
+	//ESP01_AttachChangeState(&onESP01ChangeState);
+	ESP01_AttachDebugStr(&onESP01Debug);
+
+	ESP01_setMode(CREATEWIFI);
 }
 /* END INICIALIZACIÓN WIFI */
 

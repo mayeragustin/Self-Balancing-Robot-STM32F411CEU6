@@ -14,6 +14,7 @@ static enum {
 	ESP01ATAT,
 	ESP01ATRESPONSE,
 	ESP01ATCWMODE,
+	ESP01ATCIPCLOSESERVER,
 	ESP01ATCIPMUX,
 	ESP01ATCWJAP,
 	ESP01CWJAPRESPONSE,
@@ -23,6 +24,16 @@ static enum {
 	ESP01ATCIPSTART,
 	ESP01CIPSTARTRESPONSE,
 	ESP01ATCONNECTED,
+	ESP01ATCWQAP,
+	ESP01ATCWSAP,
+	ESP01ATCWSAP_RESPONSE,
+	ESP01ATCWDHCP,
+	ESP01_WAITING_CONNECTION,
+	ESP01ATCIPSERVER,
+	ESP01ATCIPSERVER_RESPONSE,
+	ESP01ATCONFIGSERVER,
+	ESP01ATCONFIGSERVER_RESPONSE,
+	ESP01ATWAITSERVERDATA,
 	ESP01ATHARDRST0,
 	ESP01ATHARDRST1,
 	ESP01ATHARDRSTSTOP,
@@ -78,14 +89,20 @@ static uint8_t esp01TriesAT = 0;
 static _sESP01Handle esp01Handle = {.DoCHPD = NULL, .WriteUSARTByte = NULL, .WriteByteToBufRX = NULL};
 
 const char ATAT[] = "AT\r\n";
-const char ATCIPMUX[] = "AT+CIPMUX=0\r\n";
+const char ATCIPMUX[] = "AT+CIPMUX=";
 const char ATCWQAP[] = "AT+CWQAP\r\n";
 const char ATCWMODE[] = "AT+CWMODE=3\r\n";
+const char ATCIPCLOSESERVER[] = "AT+CIPSERVER=1,80";
 const char ATCWJAP[] = "AT+CWJAP=";
 const char ATCIFSR[] = "AT+CIFSR\r\n";
 const char ATCIPSTART[] = "AT+CIPSTART=";
 const char ATCIPCLOSE[] = "AT+CIPCLOSE\r\n";
 const char ATCIPSEND[] = "AT+CIPSEND=";
+
+const char ATCWSAP[] = "AT+CWSAP=\"SBR-MAYER\",\"\",5,0\r\n";
+const char ATCWDHCP[] = "AT+CWDHCP_CUR=2,1\r\n";
+const char ATCIPOPENSERVER[] = "AT+CIPSERVER=1,80\r\n";
+const char CONFIGSERVER[] = "<!DOCTYPE html><html><body><form action=\"/set\" method=\"GET\">SSID: <input name=\"ssid\"><br>PASS: <input name=\"pass\" type=\"password\"><br><input type=\"submit\" value=\"Connect\"></form></body></html>";
 
 const char respAT[] = "0302AT\r";
 const char respATp[] = "0302AT+";
@@ -105,6 +122,8 @@ const char respIPD[] = "0410+IPD";
 const char respReady[] = "0702ready\r\n";
 const char respBUSYP[] = "0602busy p";
 const char respBUSYS[] = "0602busy s";
+const char respSSID[] = "0520ssid=";
+const char respPASS[] = "0521pass=";
 // 	  const char respCIFSRAPIP[] = "1102+CIFSR:APIP";
 //    const char respCIFSRAPMAC[] = "1202+CIFSR:APMAC";
 //    const char respCIFSRSTAIP[] = "1205+CIFSR:STAIP";
@@ -112,10 +131,18 @@ const char respBUSYS[] = "0602busy s";
 
 const char *const responses[] = {respAT, respATp, respOK, respERROR, respWIFIGOTIP, respWIFICONNECTED,
 								 respWIFIDISCONNECT, respWIFIDISCONNECTED, respDISCONNECTED, respSENDOK, respCONNECT, respCLOSED,
-								 respCIFSRAPIP, respBUSY, respIPD, respReady, respBUSYP, respBUSYS, NULL};
+								 respCIFSRAPIP, respBUSY, respIPD, respReady, respBUSYP, respBUSYS,
+								 respSSID, respPASS, NULL};
 
 static uint8_t indexResponse = 0;
 static uint8_t indexResponseChar = 0;
+
+_emode mode;
+uint8_t userConnected = 0;
+
+static char ssid_buffer[MAX_SSID_LEN];
+static char pass_buffer[MAX_PASS_LEN];
+static uint8_t ssid_idx, pass_idx;
 
 //const char _DNSFAIL[] = "DNS FAIL\r";
 //const char _ATCIPDNS[] = "AT+CIPDNS_CUR=1,\"208.67.220.220\",\"8.8.8.8\"\r\n";
@@ -558,6 +585,31 @@ static void ESP01ATDecode(){
 					ESP01DbgStr("+&DBGRESPONSE IPD\n");
 			}
 			break;
+		case 20:
+			if (value == '&' || value == '\r' || ssid_idx >= MAX_SSID_LEN-1) {
+				// fin de SSID
+				ssid_buffer[ssid_idx] = '\0';
+				ssid_idx = 0;
+				esp01HState = 0;          // volvemos a buscar respuestas
+				// aquí puedes, por ejemplo:
+				ESP01DbgStr("SSID:");
+				ESP01DbgStr(&ssid_buffer[0]);
+			} else {
+				ssid_buffer[ssid_idx++] = value;
+			}
+			break;
+		case 21:
+			if (value == '&' || value == ' ' || value == '\r' || pass_idx >= MAX_PASS_LEN-1) {
+				// fin de PASS
+				pass_buffer[pass_idx] = '\0';
+				pass_idx = 0;
+				esp01HState = 0;          // volvemos a buscar respuestas
+				ESP01DbgStr("PASS:");
+				ESP01DbgStr(&pass_buffer[0]);
+			} else {
+				pass_buffer[pass_idx++] = value;
+			}
+			break;
 		default:
 			esp01HState = 0;
 			esp01TimeoutDataRx = 0;
@@ -619,13 +671,37 @@ static void ESP01DOConnection(){
 		ESP01StrToBufTX(ATCWMODE);
 		if(ESP01DbgStr != NULL)
 			ESP01DbgStr("+&DBGESP01ATCWMODE\n");
+
+		/* acá separamos de station a soft ap*/
+		if(mode == CONNECTWIFI){
+			esp01ATSate = ESP01ATCIPCLOSESERVER;
+		}else{
+			esp01ATSate = ESP01ATCIPMUX;
+		}
+
+		break;
+	case ESP01ATCIPCLOSESERVER:
+		ESP01StrToBufTX(ATCIPCLOSESERVER);
+		if(ESP01DbgStr != NULL)
+			ESP01DbgStr("+&DBGATCLOSESERVER\n");
 		esp01ATSate = ESP01ATCIPMUX;
 		break;
 	case ESP01ATCIPMUX:
 		ESP01StrToBufTX(ATCIPMUX);
+
+		if(mode == CONNECTWIFI){
+			ESP01StrToBufTX("0\r\n");
+			esp01ATSate = ESP01ATCWJAP;
+		}else{
+			ESP01StrToBufTX("1\r\n");
+			esp01ATSate = ESP01ATCWQAP;
+		}
+
+
+		//esp01ATSate = ESP01ATCWJAP;//COMENTAR
+
 		if(ESP01DbgStr != NULL)
 			ESP01DbgStr("+&DBGESP01ATCIPMUX\n");
-		esp01ATSate = ESP01ATCWJAP;
 		break;
 	case ESP01ATCWJAP:
 		if(esp01Flags.bit.WIFICONNECTED){
@@ -645,10 +721,10 @@ static void ESP01DOConnection(){
 		ESP01ByteToBufTX('\r');
 		ESP01ByteToBufTX('\n');
 		if(ESP01DbgStr != NULL)
-			ESP01DbgStr("+&DBGESP01ATCWJAP\n");
+			ESP01DbgStr("+&DBGESP01ATCWJAP");
 		esp01Flags.bit.ATRESPONSEOK = 0;
 		esp01ATSate = ESP01CWJAPRESPONSE;
-		esp01TimeoutTask = 5000;
+		esp01TimeoutTask = 500;
 		break;
 	case ESP01CWJAPRESPONSE:
 		if(esp01Flags.bit.ATRESPONSEOK){
@@ -662,7 +738,7 @@ static void ESP01DOConnection(){
 		esp01LocalIP[0] = '\0';
 		ESP01StrToBufTX(ATCIFSR);
 		if(ESP01DbgStr != NULL)
-			ESP01DbgStr("+&DBGESP01CIFSR\n");
+			ESP01DbgStr("+&DBGESP01CIFSR");
 		esp01Flags.bit.ATRESPONSEOK = 0;
 		esp01ATSate = ESP01CIFSRRESPONSE;
 		break;
@@ -683,7 +759,7 @@ static void ESP01DOConnection(){
 			break;
 		ESP01StrToBufTX(ATCIPCLOSE);
 		if(ESP01DbgStr != NULL)
-			ESP01DbgStr("+&DBGESP01ATCIPCLOSE\n");
+			ESP01DbgStr("+&DBGESP01ATCIPCLOSE");
 		esp01ATSate = ESP01ATCIPSTART;
 		break;
 	case ESP01ATCIPSTART:
@@ -704,11 +780,11 @@ static void ESP01DOConnection(){
 		ESP01ByteToBufTX('\r');
 		ESP01ByteToBufTX('\n');
 		if(ESP01DbgStr != NULL)
-			ESP01DbgStr("+&DBGESP01ATCIPSTART\n");
+			ESP01DbgStr("+&DBGESP01ATCIPSTART");
 		esp01Flags.bit.ATRESPONSEOK = 0;
 		esp01Flags.bit.UDPTCPCONNECTED = 0;
 		esp01ATSate = ESP01CIPSTARTRESPONSE;
-		esp01TimeoutTask = 5000;
+		esp01TimeoutTask = 500;
 		break;
 	case ESP01CIPSTARTRESPONSE:
 		if(esp01Flags.bit.ATRESPONSEOK)
@@ -727,12 +803,94 @@ static void ESP01DOConnection(){
 		}
 		esp01TimeoutTask = 0;
 		break;
+	/*********** SOFT AP STATES **********/
+	case ESP01ATCWQAP:
+		ESP01StrToBufTX(ATCWQAP);
+		if(ESP01DbgStr != NULL)
+			ESP01DbgStr("+&DBGESP01CWQAP");
+		esp01ATSate = ESP01ATCWSAP;
+		esp01TimeoutTask = 20;
+
+		break;
+	case ESP01ATCWSAP:
+		ESP01StrToBufTX(ATCWSAP);
+		if(ESP01DbgStr != NULL)
+			ESP01DbgStr("+&DBGESP01CWSAP");
+		esp01ATSate = ESP01ATCWDHCP;
+		esp01TimeoutTask = 300;
+		//esp01Flags.bit.ATRESPONSEOK = 0;
+		//esp01Flags.bit.ATRESPONSEOK=0;
+		//esp01TimeoutTask = 4000;
+		break;
+	case ESP01ATCWSAP_RESPONSE:
+		if(esp01Flags.bit.ATRESPONSEOK)
+			esp01ATSate = ESP01ATCWDHCP;
+		else
+			esp01ATSate = ESP01ATAT;
+		break;
+	case ESP01ATCWDHCP:
+		ESP01StrToBufTX(ATCWDHCP);
+		if(ESP01DbgStr != NULL)
+			ESP01DbgStr("+&DBGESP01CWDHCP");
+		esp01ATSate = ESP01_WAITING_CONNECTION;
+		esp01TimeoutTask = 3000;
+		break;
+	case ESP01_WAITING_CONNECTION:
+		if(userConnected){
+
+		}
+		break;
+	case ESP01ATCIPSERVER:
+		ESP01StrToBufTX(ATCIPOPENSERVER);
+		if(ESP01DbgStr != NULL)
+			ESP01DbgStr("+&DBGESP01CIPSERVER");
+		esp01ATSate = ESP01ATCONFIGSERVER;
+		esp01Flags.bit.ATRESPONSEOK = 0;
+		esp01TimeoutTask = 300;
+		break;
+	case ESP01ATCIPSERVER_RESPONSE:
+		if(esp01Flags.bit.ATRESPONSEOK)
+			esp01ATSate = ESP01ATCONFIGSERVER;
+		else
+			esp01ATSate = ESP01ATAT;
+	break;
+	case ESP01ATCONFIGSERVER:
+		ESP01StrToBufTX(ATCIPSEND);
+		ESP01StrToBufTX("0,177");
+		ESP01StrToBufTX("\r>");
+
+		esp01Flags.bit.TXCIPSEND = 1;
+		esp01Flags.bit.SENDINGDATA = 1;
+
+		if(ESP01DbgStr != NULL)
+			ESP01DbgStr("+&DBGESP01ATESP01ATCONFIGSERVER");
+
+		esp01ATSate = ESP01ATCONFIGSERVER_RESPONSE;
+		esp01Flags.bit.ATRESPONSEOK = 0;
+		esp01TimeoutTask = 200;
+	break;
+	case ESP01ATCONFIGSERVER_RESPONSE:
+		if(!esp01Flags.bit.WAITINGSYMBOL){
+			ESP01StrToBufTX(CONFIGSERVER);
+
+			esp01TimeoutTask = 500;
+
+			esp01ATSate = ESP01ATWAITSERVERDATA;
+			if(ESP01DbgStr != NULL)
+				ESP01DbgStr("+&DBGESP01ATWAITSERVERDATA");
+		}
+	case ESP01ATWAITSERVERDATA:
+
+	break;
 	}
+}
+
+void ESP01_setMode(_emode _mode){
+	mode = _mode;
 }
 
 static void ESP01SENDData(){
 	uint8_t value;
-
 	if(esp01Flags.bit.WAITINGSYMBOL){
 		if(!esp01TimeoutTxSymbol){
 			esp01irTX = esp01iwTX;
