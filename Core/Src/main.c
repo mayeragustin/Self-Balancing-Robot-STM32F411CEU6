@@ -340,12 +340,20 @@ void OLED_Print_Data_Task(){
 
 			Display_DrawBitmap(2, 17, ADC_Blackout, 37, 44, SSD1306_COLOR_BLACK);
 			for(uint8_t i = 0; i < 8; i++){
-				Display.auxYPos = 107 * Analog.value[i] + 170000;
+				/*Display.auxYPos = 107 * Analog.value[i] + 170000;
 				Display.auxYPos += 5000;
 				Display.auxYPos /= 10000;
 				Display.auxXPos = 2 + i * 3;
 				Display_DrawLine(Display.auxXPos, 61,  Display.auxXPos, Display.auxYPos, SSD1306_COLOR_WHITE);
-				Display_DrawLine(Display.auxXPos+1, 61,  Display.auxXPos+1, Display.auxYPos, SSD1306_COLOR_WHITE);
+				Display_DrawLine(Display.auxXPos+1, 61,  Display.auxXPos+1, Display.auxYPos, SSD1306_COLOR_WHITE);*/
+				for(uint8_t j = 0; j < 45; j++){
+					if(Analog.value[i] <= ADC_to_Index[j]){
+						Display.auxXPos = 2 + i * 3;
+						Display_DrawLine(Display.auxXPos, 61,  Display.auxXPos, Index_to_Bar[j], SSD1306_COLOR_WHITE);
+						Display_DrawLine(Display.auxXPos+1, 61,  Display.auxXPos+1, Index_to_Bar[j], SSD1306_COLOR_WHITE);
+						break;
+					}
+				}
 			}
 
 			if(MPU6050.isInit){
@@ -560,8 +568,8 @@ void task_10ms(){
 			is20s--;
 			if(!is20s){
 				is20s = 10;
-
-				//comm_sendCMD(&ESP.data, GETALIVE, NULL, 0);
+				if(ESP01_StateWIFI() == ESP01_WIFI_CONNECTED && ESP01_GETMODE() == CONNECTWIFI)
+					comm_sendCMD(&ESP.data, GETALIVE, NULL, 0);
 			}
 		}
 	}
@@ -1171,7 +1179,7 @@ void Init_Timing(){
 /* FIN INICIALIZACIÓN DE TIMERS Y PWM*/
 /* INICIALIZACIÓN DE MPU6050 */
 void Init_MPU6050(){
-	if(HAL_I2C_IsDeviceReady(&hi2c1, MPU6050_ADDR, 1, 10000) != HAL_OK){
+	if(HAL_I2C_IsDeviceReady(&hi2c1, MPU6050_ADDR, 1, 1000) != HAL_OK){
 		comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"MPU6050 READY", 13);
 	}else{
 		MPU6050_Set_I2C_Communication(&I2C1_Mem_Write, &I2C1_Mem_Read);
@@ -1189,7 +1197,7 @@ void Init_Display(){
 	Display.refreshCounter_10ms = DISPLAY_MEDIUM_REFRESH_RATE_10MS;
 	Display.refreshRate_10ms = DISPLAY_MEDIUM_REFRESH_RATE_10MS;
 
-	if(HAL_I2C_IsDeviceReady(&hi2c1, SSD1306_I2C_ADDR, 1, 10000) != HAL_OK){
+	if(HAL_I2C_IsDeviceReady(&hi2c1, SSD1306_I2C_ADDR, 1, 1000) != HAL_OK){
 		comm_sendCMD(&USB.data, SYSERROR, (uint8_t*)"OLED READY", 10);
 	}else{
 		Display_Set_I2C_Master_Transmit(&I2C1_DMA_Mem_Write, &I2C1_Master_Transmit);

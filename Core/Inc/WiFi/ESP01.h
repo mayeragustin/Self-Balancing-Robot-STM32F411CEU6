@@ -65,6 +65,8 @@ typedef enum{
 	CREATEWIFI,
 }_emode;
 
+_emode ESP01_GETMODE();
+
 void ESP01_setMode(_emode _mode);
 
 /**

@@ -3,6 +3,8 @@
  * Version: 01b05 - 04/08/2024
  */
 
+#define DEMOSTRACION_REGULARIZACION
+
 #include "WiFi/ESP01.h"
 #include <stddef.h>
 #include <string.h>
@@ -12,6 +14,7 @@
 
 static enum {
 	ESP01ATIDLE,
+	ESP01ATWAITINGIP,
 	ESP01ATAT,
 	ESP01ATRESPONSE,
 	ESP01ATCWMODE,
@@ -95,7 +98,7 @@ const char ATAT[] = "AT\r\n";
 const char ATCIPMUX[] = "AT+CIPMUX=";
 const char ATCWQAP[] = "AT+CWQAP\r\n";
 const char ATCWMODE[] = "AT+CWMODE=";
-const char ATCIPCLOSESERVER[] = "AT+CIPSERVER=1,80";
+const char ATCIPCLOSESERVER[] = "AT+CIPSERVER=0";
 const char ATCWJAP[] = "AT+CWJAP=";
 const char ATCIFSR[] = "AT+CIFSR\r\n";
 const char ATCIPSTART[] = "AT+CIPSTART=";
@@ -118,7 +121,7 @@ const char respAT[] = "0302AT\r";
 const char respATp[] = "0302AT+";
 const char respOK[] = "0402OK\r\n";
 const char respERROR[] = "0702ERROR\r\n";
-const char respWIFIGOTIP[] = "1302WIFI GOT IP\r\n";
+const char respWIFIGOTIP[] = "1314WIFI GOT IP\r\n";
 const char respWIFICONNECTED[] = "1602WIFI CONNECTED\r\n";
 const char respWIFIDISCONNECT[] = "1702WIFI DISCONNECT\r\n";
 const char respWIFIDISCONNECTED[] = "1902WIFI DISCONNECTED\r\n";
@@ -180,7 +183,7 @@ void ESP01_SetWIFI(const char *ssid, const char *password){
 	esp01PASSWORD[31] = '\0';
 
 	esp01TimeoutTask = 50;
-	esp01ATState = ESP01ATHARDRST0;
+	//esp01ATState = ESP01ATHARDRST0;
 
 	esp01TriesAT = 0;
 
@@ -208,7 +211,7 @@ _eESP01STATUS ESP01_StartUDP(const char *RemoteIP, uint16_t RemotePORT, uint16_t
 	if(esp01Flags.bit.WIFICONNECTED == 0)
 		return ESP01_WIFI_DISCONNECTED;
 
-	esp01ATState = ESP01ATCIPCLOSE;
+	//esp01ATState = ESP01ATCIPCLOSE;
 
 	return ESP01_UDPTCP_CONNECTING;
 }
@@ -475,12 +478,14 @@ static void ESP01ATDecode(){
 					}
 					break;
 				case 4://WIFI GOT IP
-					esp01TimeoutTask = 0;
+					/*esp01TimeoutTask = 0;
 					if(esp01ATState == ESP01CWJAPRESPONSE)
 						esp01Flags.bit.ATRESPONSEOK = 1;
 					esp01Flags.bit.WIFICONNECTED = 1;
 					if(ESP01ChangeState != NULL)
 						ESP01ChangeState(ESP01_WIFI_CONNECTED);
+					if(ESP01DbgStr != NULL)
+						ESP01DbgStr("+&DBGESP01GOTIP");*/
 					break;
 				case 5://WIFI CONNECTED
 					break;
@@ -503,7 +508,7 @@ static void ESP01ATDecode(){
 						ESP01ChangeState(ESP01_SEND_OK);
 					break;
 				case 10://CONNECT
-					if(mode == CREATEWIFI){
+					if(mode == CONNECTWIFI){
 						esp01TimeoutTask = 0;
 						esp01Flags.bit.ATRESPONSEOK = 1;
 						esp01Flags.bit.UDPTCPCONNECTED = 1;
@@ -632,6 +637,16 @@ static void ESP01ATDecode(){
 			}
 			esp01HState = 0;
 			break;
+		case 14:
+			esp01TimeoutTask = 0;
+			if(esp01ATState == ESP01CWJAPRESPONSE)
+				esp01Flags.bit.ATRESPONSEOK = 1;
+			esp01Flags.bit.WIFICONNECTED = 1;
+			if(ESP01ChangeState != NULL)
+				ESP01ChangeState(ESP01_WIFI_CONNECTED);
+			if(ESP01DbgStr != NULL)
+				ESP01DbgStr("+&DBGESP01GOTIP");
+			break;
 		case 20: //SSID
 			if (value == '&' || value == '\r' || ssid_idx >= MAX_SSID_LEN-1) {
 				// fin de SSID
@@ -701,11 +716,36 @@ static void ESP01ATDecode(){
 	}
 }
 
+_emode ESP01_GETMODE(){
+	return mode;
+}
+
 static void ESP01DOConnection(){
 	esp01TimeoutTask = 100;
 	switch(esp01ATState){
 	case ESP01ATIDLE:
-		esp01TimeoutTask = 0;
+		esp01TimeoutTask = 500;
+		esp01ATState = ESP01ATWAITINGIP;
+		break;
+	case ESP01ATWAITINGIP:
+		if(esp01Flags.bit.WIFICONNECTED == 1){
+#ifdef DEMOSTRACION_REGULARIZACION
+			esp01ATState = ESP01ATHARDRST0;
+			mode = CREATEWIFI;
+			if(ESP01DbgStr != NULL)
+				ESP01DbgStr("+&DBGESP01_DEMOSTR");
+#else
+			esp01ATState = ESP01ATCONNECTED;
+			mode = CONNECTWIFI;
+			if(ESP01DbgStr != NULL)
+			ESP01DbgStr("+&DBGESP01_RED_ENCONTRADA");
+#endif
+		}else{
+			esp01ATState = ESP01ATHARDRST0;
+			mode = CREATEWIFI;
+			if(ESP01DbgStr != NULL)
+				ESP01DbgStr("+&DBGESP01_NO_RED");
+		}
 		break;
 	case ESP01ATHARDRST0:
 		esp01Handle.DoCHPD(0);
@@ -874,18 +914,24 @@ static void ESP01DOConnection(){
 		esp01TimeoutTask = 500;
 		break;
 	case ESP01CIPSTARTRESPONSE:
-		if(esp01Flags.bit.ATRESPONSEOK)
+		if(esp01Flags.bit.ATRESPONSEOK){
 			esp01ATState = ESP01ATCONNECTED;
-		else
+			if(ESP01DbgStr != NULL)
+				ESP01DbgStr("+&DBGESP01ATCONNECTED");
+		}else
 			esp01ATState = ESP01ATAT;
 		break;
 	case ESP01ATCONNECTED:
 		if(esp01Flags.bit.WIFICONNECTED == 0){
 			esp01ATState = ESP01ATAT;
+			if(ESP01DbgStr != NULL)
+				ESP01DbgStr("+&DBGESP01desconec");
 			break;
 		}
 		if(esp01Flags.bit.UDPTCPCONNECTED == 0){
 			esp01ATState = ESP01ATCIPCLOSE;
+			if(ESP01DbgStr != NULL)
+				ESP01DbgStr("+&DBGESP01noudp");
 			break;
 		}
 		esp01TimeoutTask = 0;

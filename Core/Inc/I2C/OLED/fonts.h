@@ -110,6 +110,9 @@ extern const uint8_t status_screen[];
 
 extern const uint8_t ADC_Blackout[];
 
+extern const uint8_t Index_to_Bar[];
+
+extern const uint16_t ADC_to_Index[];
 /**
  * @brief  7 x 10 pixels font size structure 
  */
