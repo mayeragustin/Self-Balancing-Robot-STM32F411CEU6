@@ -43,10 +43,11 @@ typedef enum{
 
 
 #define ESP01RXBUFAT		128
-#define ESP01TXBUFAT		256
+#define ESP01TXBUFAT		512
 
 #define MAX_SSID_LEN		32
-#define MAX_PASS_LEN		32
+#define MAX_PASS_LEN		63
+#define MAX_IP_LEN			16
 
 
 /**< Inicializa el driver ESP01 UDP */
@@ -245,6 +246,8 @@ void ESP01_AttachDebugStr(void (*aESP01DbgStr)(const char *dbgStr));
  *
  */
 int ESP01_IsHDRRST();
+
+
 
 
 #endif /* ESP01_H_ */
